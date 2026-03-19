@@ -7,7 +7,7 @@ result = predict_text(content)
 
 print("Prediction:", result["label"])
 print(
-    f'Probabilities -> NORMAL={result["normal"]:.3f}, '
-    f'SUSPICIOUS={result["suspicious"]:.3f}, '
-    f'SQL_ERROR={result["sql_error"]:.3f}'
+    f"Probabilities -> NORMAL={result['normal']:.3f}, "
+    f"SUSPICIOUS={result['suspicious']:.3f}, "
+    f"SQL_ERROR={result['sql_error']:.3f}"
 )

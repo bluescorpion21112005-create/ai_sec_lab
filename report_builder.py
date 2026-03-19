@@ -36,6 +36,8 @@ def now_str() -> str:
 
 def clip_text(text: str, limit: int = 4000) -> str:
     return text[:limit]
+
+
 def save_lab_report_json(data, path):
     """
     Save lab analysis result to JSON file
@@ -53,21 +55,25 @@ def save_lab_report_csv(data, path):
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
 
-        writer.writerow([
-            "payload_file",
-            "label",
-            "risk_score",
-            "risk_delta",
-            "length",
-            "length_delta"
-        ])
+        writer.writerow(
+            [
+                "payload_file",
+                "label",
+                "risk_score",
+                "risk_delta",
+                "length",
+                "length_delta",
+            ]
+        )
 
         for p in payloads:
-            writer.writerow([
-                p.get("file"),
-                p.get("label"),
-                p.get("risk_score"),
-                p.get("risk_delta"),
-                p.get("length"),
-                p.get("length_delta"),
-            ])
+            writer.writerow(
+                [
+                    p.get("file"),
+                    p.get("label"),
+                    p.get("risk_score"),
+                    p.get("risk_delta"),
+                    p.get("length"),
+                    p.get("length_delta"),
+                ]
+            )

@@ -1,21 +1,19 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+from fastapi.security import HTTPBearer
 import uvicorn
 import os
 from dotenv import load_dotenv
 
 from app.api.routes import router
 from app.database import engine, Base
-from app.models import User, ScanResult
 
 load_dotenv()
 
 app = FastAPI(
     title="AI Pentest System API",
     description="AI asosida veb-saytlarni xavfsizlikka tekshirish tizimi",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # CORS sozlamalari
@@ -35,22 +33,18 @@ app.include_router(router, prefix="/api/v1")
 
 security = HTTPBearer()
 
+
 @app.get("/")
 async def root():
-    return {
-        "message": "AI Pentest System API",
-        "version": "1.0.0",
-        "status": "active"
-    }
+    return {"message": "AI Pentest System API", "version": "1.0.0", "status": "active"}
+
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
+
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=True
+        "main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)), reload=True
     )

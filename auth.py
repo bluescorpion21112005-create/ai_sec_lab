@@ -26,7 +26,7 @@ def register():
         user = User(
             full_name=full_name,
             email=email,
-            password_hash=generate_password_hash(password)
+            password_hash=generate_password_hash(password),
         )
 
         db.session.add(user)

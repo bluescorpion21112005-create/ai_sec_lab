@@ -10,6 +10,9 @@ else:
     print("TITLE:", result.get("metadata", {}).get("title"))
     print("BASELINE:", result["baseline"])
     print("SUMMARY:", result["summary"])
-    print("TOP PAYLOAD:", result["top_payload"]["file"] if result["top_payload"] else "None")
+    print(
+        "TOP PAYLOAD:",
+        result["top_payload"]["file"] if result["top_payload"] else "None",
+    )
     print("-" * 60)
     pprint(result["payloads"])

@@ -4,7 +4,7 @@ DATA = [
     ("Warning: mysql_fetch_array() expects parameter 1 to be resource", 2),
     ("Unclosed quotation mark after the character string", 2),
     ("PostgreSQL query failed: ERROR: syntax error at or near", 2),
-    ("SQLite error: near \"'\": syntax error", 2),
+    ('SQLite error: near "\'": syntax error', 2),
     ("ORA-01756: quoted string not properly terminated", 2),
     ("Database error occurred while executing query", 2),
     ("Internal server error due to malformed SQL statement", 2),
@@ -12,7 +12,6 @@ DATA = [
     ("SQLSTATE[42000]: Syntax error or access violation", 2),
     ("ODBC SQL Server Driver syntax error", 2),
     ("Microsoft OLE DB Provider for SQL Server error", 2),
-
     # SUSPICIOUS = 1
     ("Internal server error", 1),
     ("Unexpected server response", 1),
@@ -24,7 +23,6 @@ DATA = [
     ("Query execution failed", 1),
     ("Parameter validation failed", 1),
     ("Invalid input format", 1),
-
     # NORMAL = 0
     ("Welcome back, user!", 0),
     ("Product list loaded successfully", 0),
@@ -38,4 +36,4 @@ DATA = [
     ("Settings saved successfully", 0),
     ("User registered successfully", 0),
     ("Logout completed", 0),
-]   
+]

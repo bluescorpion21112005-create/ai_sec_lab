@@ -3,7 +3,6 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
 import json
 import os
 from datetime import datetime
@@ -15,7 +14,7 @@ class ReportGenerator:
         self.scan_results = scan_results
         self.report_dir = "reports"
         os.makedirs(self.report_dir, exist_ok=True)
-    
+
     def generate_html_report(self) -> str:
         """HTML formatida hisobot yaratish"""
         template = """
@@ -341,118 +340,130 @@ class ReportGenerator:
         </body>
         </html>
         """
-        
+
         template_obj = Template(template)
         html_content = template_obj.render(scan_results=self.scan_results)
-        
+
         # Hisobotni saqlash
         filename = f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         filepath = os.path.join(self.report_dir, filename)
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
+
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(html_content)
-        
+
         return filepath
-    
+
     def generate_pdf_report(self) -> str:
         """PDF formatida hisobot yaratish"""
         filename = f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = os.path.join(self.report_dir, filename)
-        
+
         doc = SimpleDocTemplate(filepath, pagesize=letter)
         styles = getSampleStyleSheet()
         story = []
-        
+
         # Sarlavha
         title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
+            "CustomTitle",
+            parent=styles["Heading1"],
             fontSize=24,
-            textColor=colors.HexColor('#2c3e50'),
-            spaceAfter=30
+            textColor=colors.HexColor("#2c3e50"),
+            spaceAfter=30,
         )
-        
-        title = Paragraph(f"AI Pentest Hisoboti", title_style)
+
+        title = Paragraph("AI Pentest Hisoboti", title_style)
         story.append(title)
-        
+
         # URL ma'lumoti
         url_text = f"<b>URL:</b> {self.scan_results.get('target_url', '')}<br/>"
-        url_text += f"<b>Skanerlangan:</b> {self.scan_results.get('scan_completed', '')}"
-        story.append(Paragraph(url_text, styles['Normal']))
+        url_text += (
+            f"<b>Skanerlangan:</b> {self.scan_results.get('scan_completed', '')}"
+        )
+        story.append(Paragraph(url_text, styles["Normal"]))
         story.append(Spacer(1, 20))
-        
+
         # Xulosa
-        summary = self.scan_results.get('summary', {})
-        summary_text = f"<b>Jami zaifliklar:</b> {summary.get('total_vulnerabilities', 0)}<br/>"
-        story.append(Paragraph(summary_text, styles['Normal']))
-        
+        summary = self.scan_results.get("summary", {})
+        summary_text = (
+            f"<b>Jami zaifliklar:</b> {summary.get('total_vulnerabilities', 0)}<br/>"
+        )
+        story.append(Paragraph(summary_text, styles["Normal"]))
+
         # Zaifliklar jadvali
-        data = [['Zaiflik turi', 'Severity', 'Remediation']]
-        for vuln in self.scan_results.get('vulnerabilities', [])[:10]:  # Eng ko'pi bilan 10 ta
-            data.append([
-                vuln.get('type', ''),
-                vuln.get('severity', ''),
-                vuln.get('remediation', '')[:50] + '...'
-            ])
-        
+        data = [["Zaiflik turi", "Severity", "Remediation"]]
+        for vuln in self.scan_results.get("vulnerabilities", [])[
+            :10
+        ]:  # Eng ko'pi bilan 10 ta
+            data.append(
+                [
+                    vuln.get("type", ""),
+                    vuln.get("severity", ""),
+                    vuln.get("remediation", "")[:50] + "...",
+                ]
+            )
+
         table = Table(data)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 14),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, 0), 14),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
+
         story.append(table)
-        
+
         # PDF yaratish
         doc.build(story)
-        
+
         return filepath
-    
+
     def generate_json_report(self) -> str:
         """JSON formatida hisobot yaratish"""
         filename = f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         filepath = os.path.join(self.report_dir, filename)
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
+
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(self.scan_results, f, indent=2, ensure_ascii=False)
-        
+
         return filepath
-    
+
     def generate_markdown_report(self) -> str:
         """Markdown formatida hisobot yaratish"""
         filename = f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         filepath = os.path.join(self.report_dir, filename)
-        
+
         md_content = f"""# AI Pentest Hisoboti
 
 ## Umumiy ma'lumot
-- **URL:** {self.scan_results.get('target_url', '')}
-- **Skanerlangan:** {self.scan_results.get('scan_completed', '')}
-- **Skanerlash vaqti:** {self.scan_results.get('scan_duration', '')} soniya
+- **URL:** {self.scan_results.get("target_url", "")}
+- **Skanerlangan:** {self.scan_results.get("scan_completed", "")}
+- **Skanerlash vaqti:** {self.scan_results.get("scan_duration", "")} soniya
 
 ## Xulosa
-- **Jami zaifliklar:** {self.scan_results.get('summary', {}).get('total_vulnerabilities', 0)}
-- **Xavf darajasi:** {self.scan_results.get('summary', {}).get('risk_level', 'N/A')}
+- **Jami zaifliklar:** {self.scan_results.get("summary", {}).get("total_vulnerabilities", 0)}
+- **Xavf darajasi:** {self.scan_results.get("summary", {}).get("risk_level", "N/A")}
 
 ## Aniqlangan zaifliklar
 
 """
-        
-        for vuln in self.scan_results.get('vulnerabilities', []):
+
+        for vuln in self.scan_results.get("vulnerabilities", []):
             md_content += f"""
-### {vuln.get('type', '')} (Severity: {vuln.get('severity', '').upper()})
-- **Tavsif:** {vuln.get('description', '')}
-- **Remediation:** {vuln.get('remediation', '')}
+### {vuln.get("type", "")} (Severity: {vuln.get("severity", "").upper()})
+- **Tavsif:** {vuln.get("description", "")}
+- **Remediation:** {vuln.get("remediation", "")}
 
 """
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
+
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(md_content)
-        
+
         return filepath

@@ -1,6 +1,8 @@
 from pathlib import Path
 from datetime import datetime
 import json
+
+
 def read_text_file(path: str) -> str:
     raw = Path(path).read_bytes()
     try:
@@ -8,16 +10,17 @@ def read_text_file(path: str) -> str:
     except UnicodeDecodeError:
         return raw.decode("latin-1", errors="ignore")
 
+
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-def clip_text(text: str, limit: int = 4000) -> str:
-    return text[:limit]
+
 
 def clip_text(text: str, limit: int = 4000) -> str:
     return text[:limit]
-from pathlib import Path
-from datetime import datetime
-import json
+
+
+def clip_text(text: str, limit: int = 4000) -> str:
+    return text[:limit]
 
 
 def ensure_dir(path: str) -> None:

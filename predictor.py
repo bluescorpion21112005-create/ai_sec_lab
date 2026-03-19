@@ -2,11 +2,7 @@ from joblib import load
 import requests
 import re
 
-LABEL_NAMES = {
-    0: "NORMAL",
-    1: "SUSPICIOUS",
-    2: "SQL_ERROR"
-}
+LABEL_NAMES = {0: "NORMAL", 1: "SUSPICIOUS", 2: "SQL_ERROR"}
 
 SQL_KEYWORDS = [
     "sql syntax",
@@ -79,10 +75,7 @@ def find_matched_keywords(text: str):
     matched_sql = [kw for kw in SQL_KEYWORDS if kw in lower_text]
     matched_suspicious = [kw for kw in SUSPICIOUS_KEYWORDS if kw in lower_text]
 
-    return {
-        "sql": matched_sql,
-        "suspicious": matched_suspicious
-    }
+    return {"sql": matched_sql, "suspicious": matched_suspicious}
 
 
 def highlight_keywords(text: str):
@@ -94,13 +87,12 @@ def highlight_keywords(text: str):
         pattern = re.compile(re.escape(kw), re.IGNORECASE)
         if kw in SQL_KEYWORDS:
             highlighted = pattern.sub(
-                lambda m: f'<mark class="hl-sql">{m.group(0)}</mark>',
-                highlighted
+                lambda m: f'<mark class="hl-sql">{m.group(0)}</mark>', highlighted
             )
         else:
             highlighted = pattern.sub(
                 lambda m: f'<mark class="hl-suspicious">{m.group(0)}</mark>',
-                highlighted
+                highlighted,
             )
 
     return highlighted
@@ -127,18 +119,14 @@ def predict_text(text: str):
         "sql_error": sql_error,
         "risk_score": risk_score,
         "matched_keywords": matched,
-        "highlighted_text": highlight_keywords(text)
+        "highlighted_text": highlight_keywords(text),
     }
 
 
 def scan_url(url: str):
     try:
         response = requests.get(
-            url,
-            timeout=8,
-            headers={
-                "User-Agent": "AI-SQL-Error-Detector/1.0"
-            }
+            url, timeout=8, headers={"User-Agent": "AI-SQL-Error-Detector/1.0"}
         )
 
         text = response.text
@@ -150,12 +138,8 @@ def scan_url(url: str):
             "status": response.status_code,
             "length": len(text),
             "content": text,
-            "prediction": prediction
+            "prediction": prediction,
         }
 
     except Exception as e:
-        return {
-            "ok": False,
-            "url": url,
-            "error": str(e)
-        }
+        return {"ok": False, "url": url, "error": str(e)}
