@@ -356,9 +356,293 @@ def subscribe(plan):
     return redirect(url_for("dashboard"))
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
+@login_required
 def home():
-    return "Site is working"
+    global LAST_LAB_CASE
+
+    result = None
+    content = ""
+    url = ""
+    batch_urls = ""
+    error = None
+    status = None
+    length = None
+    source_label = ""
+    highlighted_preview = ""
+    batch_results = []
+    lab_case = None
+    lab_case_path = ""
+    lab_sort = "risk_desc"
+    lab_filter = ""
+
+    if request.method == "POST":
+        content = request.form.get("content", "").strip()
+        url = request.form.get("url", "").strip()
+        batch_urls = request.form.get("batch_urls", "").strip()
+        lab_case_path = request.form.get("lab_case_path", "").strip()
+        lab_sort = request.form.get("lab_sort", "risk_desc").strip() or "risk_desc"
+        lab_filter = request.form.get("lab_filter", "").strip()
+        uploaded_files = request.files.getlist("files")
+
+        if request.form.get("analyze_lab_case") == "1":
+            if lab_case_path:
+                lab_result = analyze_case(lab_case_path)
+                if lab_result.get("ok"):
+                    payloads = lab_result.get("payloads", [])
+
+                    if lab_filter:
+                        q = lab_filter.lower()
+                        payloads = [
+                            p
+                            for p in payloads
+                            if (
+                                q in p["label"].lower()
+                                or q in p["file"].lower()
+                                or any(
+                                    q in kw.lower() for kw in p.get("matched_sql", [])
+                                )
+                                or any(
+                                    q in kw.lower()
+                                    for kw in p.get("matched_suspicious", [])
+                                )
+                            )
+                        ]
+
+                    if lab_sort == "risk_asc":
+                        payloads.sort(key=lambda x: x.get("risk_score", 0))
+                    elif lab_sort == "delta_desc":
+                        payloads.sort(
+                            key=lambda x: x.get("risk_delta", 0), reverse=True
+                        )
+                    elif lab_sort == "delta_asc":
+                        payloads.sort(key=lambda x: x.get("risk_delta", 0))
+                    elif lab_sort == "label":
+                        payloads.sort(key=lambda x: x.get("label", ""))
+                    else:
+                        payloads.sort(
+                            key=lambda x: x.get("risk_score", 0), reverse=True
+                        )
+
+                    baseline_text = lab_result.get("baseline_text", "")
+                    for p in payloads:
+                        p["diff_html"] = build_diff_html(
+                            baseline_text, p.get("text", "")
+                        )
+
+                    lab_result["payloads"] = payloads
+                    lab_case = lab_result
+                    LAST_LAB_CASE = lab_result
+                    save_lab_report_json(lab_result, EXPORT_LAST_REPORT_JSON)
+                    save_lab_report_csv(lab_result, EXPORT_LAB_CSV)
+
+                    if lab_result.get("payloads"):
+                        top = lab_result["payloads"][0]
+                        result = {
+                            "label": top["label"],
+                            "normal": 0,
+                            "suspicious": 0,
+                            "sql_error": 0,
+                            "risk_score": top["risk_score"],
+                            "matched_keywords": {
+                                "sql": top.get("matched_sql", []),
+                                "suspicious": top.get("matched_suspicious", []),
+                            },
+                        }
+                        status = "LAB"
+                        length = top["length"]
+                        source_label = top["file"]
+
+                        add_to_history(
+                            f"lab:{lab_result['case']}::{top['file']}",
+                            top["label"],
+                            top["risk_score"],
+                            "LAB",
+                            top["length"],
+                            user_id=current_user.id,
+                        )
+                else:
+                    error = lab_result.get("error", "Lab case analysis failed")
+            else:
+                error = "Please provide a lab case folder path."
+
+        elif batch_urls:
+            if not user_has_feature(current_user, "batch_scan"):
+                flash("Batch skanerlash faqat Korporativ tarifda mavjud.", "warning")
+                return redirect(url_for("pricing"))
+
+            urls = [u.strip() for u in batch_urls.splitlines() if u.strip()]
+            for item_url in urls:
+                scan_result = scan_url(item_url)
+                if scan_result.get("ok"):
+                    prediction = scan_result["prediction"]
+                    batch_results.append(
+                        {
+                            "source": item_url,
+                            "status": scan_result["status"],
+                            "label": prediction["label"],
+                            "risk_score": prediction["risk_score"],
+                            "length": scan_result["length"],
+                        }
+                    )
+                    add_to_history(
+                        item_url,
+                        prediction["label"],
+                        prediction["risk_score"],
+                        scan_result["status"],
+                        scan_result["length"],
+                        user_id=current_user.id,
+                    )
+                else:
+                    batch_results.append(
+                        {
+                            "source": item_url,
+                            "status": "ERR",
+                            "label": "FAILED",
+                            "risk_score": 0,
+                            "length": 0,
+                        }
+                    )
+
+            if batch_results:
+                top_item = next(
+                    (x for x in batch_results if x["label"] != "FAILED"), None
+                )
+                if top_item:
+                    result = {
+                        "label": top_item["label"],
+                        "normal": 0,
+                        "suspicious": 0,
+                        "sql_error": 0,
+                        "risk_score": top_item["risk_score"],
+                        "matched_keywords": {"sql": [], "suspicious": []},
+                    }
+                    status = top_item["status"]
+                    length = top_item["length"]
+                    source_label = top_item["source"]
+
+        elif uploaded_files and any(f.filename for f in uploaded_files):
+            valid_files = [f for f in uploaded_files if f and f.filename]
+            first_text = None
+
+            for i, file in enumerate(valid_files):
+                raw = file.read()
+                try:
+                    text = raw.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = raw.decode("latin-1", errors="ignore")
+
+                if i == 0:
+                    first_text = text
+
+                prediction = predict_text(text)
+                batch_results.append(
+                    {
+                        "source": file.filename,
+                        "status": "LOCAL",
+                        "label": prediction["label"],
+                        "risk_score": prediction["risk_score"],
+                        "length": len(text),
+                    }
+                )
+                add_to_history(
+                    file.filename,
+                    prediction["label"],
+                    prediction["risk_score"],
+                    "LOCAL",
+                    len(text),
+                    user_id=current_user.id,
+                )
+
+            if first_text is not None:
+                result = predict_text(first_text)
+                status = "LOCAL"
+                length = len(first_text)
+                source_label = valid_files[0].filename
+                highlighted_preview = Markup(clip_text(result["highlighted_text"]))
+
+        elif url:
+            scan_result = scan_url(url)
+            if scan_result.get("ok"):
+                result = scan_result["prediction"]
+                content = scan_result["content"]
+                status = scan_result["status"]
+                length = scan_result["length"]
+                source_label = url
+                highlighted_preview = Markup(result["highlighted_text"][:4000])
+                add_to_history(
+                    url,
+                    result["label"],
+                    result["risk_score"],
+                    status,
+                    length,
+                    user_id=current_user.id,
+                )
+            else:
+                error = scan_result.get("error", "Unknown URL scanning error")
+
+        elif content:
+            result = predict_text(content)
+            status = "LOCAL"
+            length = len(content)
+            source_label = "pasted_text"
+            highlighted_preview = Markup(clip_text(result["highlighted_text"]))
+            add_to_history(
+                "pasted_text",
+                result["label"],
+                result["risk_score"],
+                status,
+                length,
+                user_id=current_user.id,
+            )
+
+        else:
+            error = "Please provide a URL, batch URLs, response text, or upload one or more files."
+
+    chart_counts = history_counts()
+    chart_json = json.dumps(chart_counts)
+
+    if not lab_case:
+        lab_case = LAST_LAB_CASE
+
+    return render_template(
+        "index.html",
+        result=result,
+        content=content,
+        url=url,
+        batch_urls=batch_urls,
+        error=error,
+        status=status,
+        length=length,
+        source_label=source_label,
+        highlighted_preview=highlighted_preview,
+        batch_results=batch_results,
+        chart_counts=chart_counts,
+        chart_json=chart_json,
+        badge_class_name=badge_class_name,
+        lab_case=lab_case,
+        lab_case_path=lab_case_path,
+        lab_sort=lab_sort,
+        lab_filter=lab_filter,
+        user=current_user,
+    )
+
+
+@app.route("/history")
+@login_required
+def history_page():
+    user_history = (
+        ScanRecord.query.filter_by(user_id=current_user.id)
+        .order_by(ScanRecord.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "history.html",
+        history=user_history,
+        badge_class_name=badge_class_name,
+    )
+
 
 @app.route("/history/clear", methods=["POST"])
 @login_required
