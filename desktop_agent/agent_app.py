@@ -408,7 +408,10 @@ class DesktopScannerApp(ctk.CTk):
                 sev = item.get("severity", "info").upper()
                 ftype = item.get("type", "issue")
                 detail = item.get("detail", "No detail")
+                recommendation = item.get("recommendation", "No recommendation")
                 lines.append(f"{i}. [{sev}] {ftype} - {detail}")
+                lines.append(f"    Recommendation: {recommendation}")
+                lines.append("")
 
             self.after(0, lambda: self.set_results(lines, len(findings)))
             self.after(0, lambda: self.set_progress(1))
@@ -467,7 +470,10 @@ class DesktopScannerApp(ctk.CTk):
                 sev = item.get("severity", "info").upper()
                 ftype = item.get("type", "issue")
                 detail = item.get("detail", "No detail")
+                recommendation = item.get("recommendation", "No recommendation")
                 lines.append(f"{i}. [{sev}] {ftype} - {detail}")
+                lines.append(f"    Recommendation: {recommendation}")
+                lines.append("")
 
             lines.append("")
             lines.append("[INFO] Cloud response:")
