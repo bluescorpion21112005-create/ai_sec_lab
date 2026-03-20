@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <section class="card" style="max-width: 900px; margin: 40px auto;">
+    <h1 class="title">Desktop Agent Download</h1>
+    <p style="margin-top: 10px;">
+      Localhost va local network saytlarni xavfsizlik bo‘yicha tekshirish uchun
+      AI Security Lab Desktop Agent dasturini yuklab oling.
+    </p>
+
+    <div style="margin-top: 24px;">
+      <a href="{{ url_for('download_desktop_agent') }}" class="btn-link btn-primary">
+        Windows uchun yuklab olish
+      </a>
+    </div>
+
+    <div style="margin-top: 30px;">
+      <h3>Qanday ishlatiladi?</h3>
+      <p>1. Desktop Agent dasturini yuklab oling</p>
+      <p>2. Uni ishga tushiring</p>
+      <p>3. Dashboarddan API tokenni oling</p>
+      <p>4. Local URL ni kiriting</p>
+      <p>5. Scan qiling va natijani cloudga yuboring</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

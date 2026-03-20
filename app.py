@@ -8,6 +8,7 @@ from flask import (
     flash,
     jsonify,
     g,
+    send_from_directory
 )
 from predictor import predict_text, scan_url
 from lab_analyzer import analyze_case
@@ -23,7 +24,7 @@ from config import (
     EXPORT_LAST_REPORT_JSON,
     EXPORT_LAB_CSV,
 )
-from models import db, User, Project, ScanRecord, Subscription
+from models import db, User, Project, ScanRecord, Subscription, LocalScanResult
 from auth import auth_bp
 from report_builder import save_lab_report_json, save_lab_report_csv
 from functools import wraps
@@ -274,6 +275,20 @@ def history_counts():
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+@app.route("/download")
+def download_page():
+    return render_template("download.html")
+
+
+@app.route("/download-desktop-agent")
+def download_desktop_agent():
+    downloads_dir = os.path.join(app.root_path, "static", "downloads")
+    return send_from_directory(
+        downloads_dir,
+        "AI-Sec-Lab.exe",
+        as_attachment=True
+    )
+
 
 @app.context_processor
 def inject_plan_data():
@@ -355,6 +370,48 @@ def subscribe(plan):
     flash(f"{plan} plan activated", "success")
     return redirect(url_for("dashboard"))
 
+
+@app.route("/api/submit-local-scan", methods=["POST"])
+def submit_local_scan():
+    auth_header = request.headers.get("Authorization", "").strip()
+
+    if not auth_header.startswith("Bearer "):
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
+    token = auth_header.split(" ", 1)[1].strip()
+    user = User.query.filter_by(api_token=token).first()
+
+    if not user:
+        return jsonify({"status": "error", "message": "Invalid API token"}), 401
+
+    data = request.get_json() or {}
+
+    target_url = (data.get("target_url") or "").strip()
+    scan_type = (data.get("scan_type") or "local_agent").strip()
+    findings = data.get("findings", [])
+
+    if not target_url:
+        return jsonify({"status": "error", "message": "target_url is required"}), 400
+
+    if not isinstance(findings, list):
+        return jsonify({"status": "error", "message": "findings must be a list"}), 400
+
+    scan = LocalScanResult(
+        user_id=user.id,
+        target_url=target_url,
+        scan_type=scan_type,
+        findings_json=json.dumps(findings, ensure_ascii=False),
+        status="completed"
+    )
+
+    db.session.add(scan)
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Local scan saved successfully",
+        "scan_id": scan.id
+    })
 
 @app.route("/", methods=["GET"])
 @login_required

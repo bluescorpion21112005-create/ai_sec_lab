@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container history-container">
+  <section class="card">
+    <h1 class="title">Local Scan History</h1>
+
+    {% if scans %}
+      {% for scan in scans %}
+        <div class="history-item" style="margin-bottom: 20px; padding: 16px; border: 1px solid #2a3655; border-radius: 12px;">
+          <h3>{{ scan.target_url }}</h3>
+          <p><strong>Scan type:</strong> {{ scan.scan_type }}</p>
+          <p><strong>Status:</strong> {{ scan.status }}</p>
+          <p><strong>Time:</strong> {{ scan.created_at }}</p>
+          <p><strong>Total findings:</strong> {{ scan.findings_count }}</p>
+
+          {% if scan.findings %}
+            <ul>
+              {% for finding in scan.findings %}
+                <li style="margin-bottom: 8px;">
+                  <strong>{{ finding.get("type", "issue") }}</strong> -
+                  {{ finding.get("detail", "No detail") }}
+                  {% if finding.get("severity") %}
+                    <em>({{ finding.get("severity") }})</em>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No findings.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>Hali local scan natijalari yo‘q.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

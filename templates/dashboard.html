@@ -112,6 +112,19 @@
         <a href="{{ url_for('subscribe', plan='pro') }}" class="btn-link btn-secondary">Pro</a>
         <a href="{{ url_for('subscribe', plan='corporate') }}" class="btn-link btn-primary">Corporate</a>
       </div>
+      <div class="feature-card">
+        <div class="feature-icon">💻</div>
+        <h3>Local Scanner History</h3>
+        <p>Desktop agent yuborgan localhost va local network scan natijalari.</p>
+        <a href="{{ url_for('local_scan_history') }}" class="btn-primary">Open</a>
+      </div>
+      <div class="subscription-box">
+        <h3>Desktop Agent API Token</h3>
+        <p>Local scanner ushbu token orqali cloud hisobingizga ulanadi.</p>
+        <code style="display:block; padding:10px; background:#10172a; border-radius:8px; word-break:break-all;">
+          {{ current_user.api_token }}
+        </code>
+      </div>
     </section>
   </div>
 </body>

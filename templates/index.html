@@ -22,6 +22,7 @@
         <a href="#tools">Tools</a>
         <a href="#dashboard">Dashboard</a>
         <a href="#pricing">Narxlar</a>
+        <a href="{{ url_for('download_page') }}">Download</a>
       </div>
 
       <div class="nav-buttons">
@@ -453,6 +454,26 @@
   </div>
 </section>
   </main>
+  <div class="subscription-box" style="margin-top:20px;">
+    <h3>🔑 Desktop Agent API Token</h3>
+    <p>Local scanner ushbu token orqali sizning hisobingizga ulanadi.</p>
+
+    <div style="background:#0f172a; padding:10px; border-radius:8px; word-break:break-all;">
+      <code>{{ current_user.api_token }}</code>
+    </div>
+
+    <button onclick="copyToken()" style="margin-top:10px;" class="btn-primary">
+      Copy Token
+    </button>
+</div>
+
+<script>
+function copyToken() {
+      const token = "{{ current_user.api_token }}";
+      navigator.clipboard.writeText(token);
+      alert("Token copied!");
+}
+</script>
 
   <footer>
     <div class="footer-content">
