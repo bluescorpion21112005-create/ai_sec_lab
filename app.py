@@ -33,6 +33,7 @@ import csv
 import json
 import difflib
 import asyncio
+import secrets
 from utils import clip_text
 from backend.app.scanner.vulnerability_scanner import VulnerabilityScanner
 
@@ -278,6 +279,13 @@ def load_user(user_id):
 @app.route("/download")
 def download_page():
     return render_template("download.html")
+@app.route("/regenerate-api-token", methods=["POST"])
+@login_required
+def regenerate_api_token():
+    current_user.api_token = secrets.token_hex(32)
+    db.session.commit()
+    flash("API token muvaffaqiyatli yangilandi.", "success")
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/download-desktop-agent")
@@ -369,8 +377,106 @@ def subscribe(plan):
     db.session.commit()
     flash(f"{plan} plan activated", "success")
     return redirect(url_for("dashboard"))
+@app.route("/local-scan/<int:scan_id>")
+@login_required
+def local_scan_detail(scan_id):
+    scan = LocalScanResult.query.filter_by(
+        id=scan_id,
+        user_id=current_user.id
+    ).first_or_404()
 
+    try:
+        findings = json.loads(scan.findings_json)
+    except Exception:
+        findings = []
 
+    severity_counts = {
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+    }
+
+    for finding in findings:
+        severity = str(finding.get("severity", "info")).lower()
+        if severity in severity_counts:
+            severity_counts[severity] += 1
+        else:
+            severity_counts["info"] += 1
+
+    return render_template(
+        "local_scan_detail.html",
+        scan=scan,
+        findings=findings,
+        severity_counts=severity_counts
+    )
+@app.route("/local-scan-history")
+@login_required
+def local_scan_history():
+    search = request.args.get("search", "").strip().lower()
+    severity_filter = request.args.get("severity", "").strip().lower()
+    sort_order = request.args.get("sort", "latest").strip().lower()
+
+    scans_query = LocalScanResult.query.filter_by(user_id=current_user.id)
+
+    if sort_order == "oldest":
+        scans = scans_query.order_by(LocalScanResult.created_at.asc()).all()
+    else:
+        scans = scans_query.order_by(LocalScanResult.created_at.desc()).all()
+
+    prepared_scans = []
+
+    for scan in scans:
+        try:
+            findings = json.loads(scan.findings_json)
+        except Exception:
+            findings = []
+
+        severity_counts = {
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "info": 0
+        }
+
+        for finding in findings:
+            severity = str(finding.get("severity", "info")).lower()
+            if severity in severity_counts:
+                severity_counts[severity] += 1
+            else:
+                severity_counts["info"] += 1
+
+        # search filter
+        if search and search not in (scan.target_url or "").lower():
+            continue
+
+        # severity filter
+        if severity_filter:
+            matched = any(
+                str(f.get("severity", "info")).lower() == severity_filter
+                for f in findings
+            )
+            if not matched:
+                continue
+
+        prepared_scans.append({
+            "id": scan.id,
+            "target_url": scan.target_url,
+            "scan_type": scan.scan_type,
+            "status": scan.status,
+            "created_at": scan.created_at,
+            "findings": findings,
+            "findings_count": len(findings),
+            "severity_counts": severity_counts
+        })
+
+    return render_template(
+        "local_scan_history.html",
+        scans=prepared_scans,
+        search=search,
+        severity_filter=severity_filter,
+        sort_order=sort_order
+    )
 @app.route("/api/submit-local-scan", methods=["POST"])
 def submit_local_scan():
     auth_header = request.headers.get("Authorization", "").strip()
@@ -780,6 +886,29 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    user_scans = LocalScanResult.query.filter_by(user_id=current_user.id).all()
+
+    total_scans = len(user_scans)
+    total_findings = 0
+    high_risk_findings = 0
+    last_scan_time = None
+
+    if user_scans:
+        latest_scan = max(user_scans, key=lambda x: x.created_at or datetime.min)
+        last_scan_time = latest_scan.created_at
+
+    for scan in user_scans:
+        try:
+            findings = json.loads(scan.findings_json)
+        except Exception:
+            findings = []
+
+        total_findings += len(findings)
+
+        for finding in findings:
+            severity = str(finding.get("severity", "info")).lower()
+            if severity == "high":
+                high_risk_findings += 1
     projects = Project.query.filter_by(user_id=current_user.id).all()
     recent_scans = (
         ScanRecord.query.filter_by(user_id=current_user.id)
@@ -806,6 +935,10 @@ def dashboard():
         stats=stats,
         badge_class_name=badge_class_name,
         user=current_user,
+        total_scans=total_scans,
+        total_findings=total_findings,
+        high_risk_findings=high_risk_findings,
+        last_scan_time=last_scan_time
     )
 
 

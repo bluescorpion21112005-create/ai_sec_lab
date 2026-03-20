@@ -4,33 +4,111 @@
 <div class="container history-container">
   <section class="card">
     <h1 class="title">Local Scan History</h1>
+    <p style="margin-bottom: 20px;">
+      Desktop Agent orqali yuborilgan localhost va local network scan natijalari.
+    </p>
+<form method="get" class="history-filters">
+  <input
+    type="text"
+    name="search"
+    placeholder="Search by target URL"
+    value="{{ search or '' }}"
+    class="filter-input"
+  >
 
+  <select name="severity" class="filter-select">
+    <option value="">All Severities</option>
+    <option value="high" {% if severity_filter == "high" %}selected{% endif %}>High</option>
+    <option value="medium" {% if severity_filter == "medium" %}selected{% endif %}>Medium</option>
+    <option value="low" {% if severity_filter == "low" %}selected{% endif %}>Low</option>
+    <option value="info" {% if severity_filter == "info" %}selected{% endif %}>Info</option>
+  </select>
+
+  <select name="sort" class="filter-select">
+    <option value="latest" {% if sort_order == "latest" %}selected{% endif %}>Latest First</option>
+    <option value="oldest" {% if sort_order == "oldest" %}selected{% endif %}>Oldest First</option>
+  </select>
+
+  <button type="submit" class="btn-link btn-primary">Apply</button>
+  <a href="{{ url_for('local_scan_history') }}" class="btn-link btn-muted">Reset</a>
+</form>
     {% if scans %}
-      {% for scan in scans %}
-        <div class="history-item" style="margin-bottom: 20px; padding: 16px; border: 1px solid #2a3655; border-radius: 12px;">
-          <h3>{{ scan.target_url }}</h3>
-          <p><strong>Scan type:</strong> {{ scan.scan_type }}</p>
-          <p><strong>Status:</strong> {{ scan.status }}</p>
-          <p><strong>Time:</strong> {{ scan.created_at }}</p>
-          <p><strong>Total findings:</strong> {{ scan.findings_count }}</p>
+      <div class="history-grid">
+        {% for scan in scans %}
+          <div class="history-item scan-card">
+            <div class="scan-card-top">
+                <div><div style="margin-bottom: 16px;">
+                  <a href="{{ url_for('local_scan_detail', scan_id=scan.id) }}" class="btn-link btn-primary">
+                  View Details
+                  </a>
+                </div>
+                <h3 class="scan-target">{{ scan.target_url }}</h3>
+                <p class="scan-meta">
+                  <strong>Scan type:</strong> {{ scan.scan_type }} |
+                  <strong>Status:</strong> {{ scan.status }} |
+                  <strong>Time:</strong> {{ scan.created_at }}
+                </p>
+              </div>
+              <div class="scan-total">
+                <span class="scan-total-number">{{ scan.findings_count }}</span>
+                <span class="scan-total-label">findings</span>
+              </div>
+            </div>
 
-          {% if scan.findings %}
-            <ul>
-              {% for finding in scan.findings %}
-                <li style="margin-bottom: 8px;">
-                  <strong>{{ finding.get("type", "issue") }}</strong> -
-                  {{ finding.get("detail", "No detail") }}
-                  {% if finding.get("severity") %}
-                    <em>({{ finding.get("severity") }})</em>
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <p>No findings.</p>
-          {% endif %}
-        </div>
-      {% endfor %}
+            <div class="severity-summary">
+              <div class="sev-box sev-high">
+                <span class="sev-count">{{ scan.severity_counts.high }}</span>
+                <span class="sev-label">High</span>
+              </div>
+              <div class="sev-box sev-medium">
+                <span class="sev-count">{{ scan.severity_counts.medium }}</span>
+                <span class="sev-label">Medium</span>
+              </div>
+              <div class="sev-box sev-low">
+                <span class="sev-count">{{ scan.severity_counts.low }}</span>
+                <span class="sev-label">Low</span>
+              </div>
+              <div class="sev-box sev-info">
+                <span class="sev-count">{{ scan.severity_counts.info }}</span>
+                <span class="sev-label">Info</span>
+              </div>
+            </div>
+
+<div style="margin-bottom: 16px;">
+  <a href="{{ url_for('local_scan_detail', scan_id=scan.id) }}" class="btn-link btn-primary">
+    View Details
+  </a>
+</div>
+
+            {% if scan.findings %}
+              <div class="findings-list">
+                {% for finding in scan.findings %}
+                  <div class="finding-row">
+                    <div class="finding-head">
+                      <span class="finding-type">{{ finding.get("type", "issue") }}</span>
+                      <span class="severity-badge severity-{{ finding.get('severity', 'info')|lower }}">
+                        {{ finding.get("severity", "info")|upper }}
+                      </span>
+                    </div>
+                    
+                    <div class="finding-detail">
+                      {{ finding.get("detail", "No detail") }}
+                    </div>
+
+                    {% if finding.get("recommendation") %}
+                      <div class="finding-recommendation">
+                        <strong>Recommendation:</strong> {{ finding.get("recommendation") }}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p>No findings.</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
     {% else %}
       <p>Hali local scan natijalari yo‘q.</p>
     {% endif %}

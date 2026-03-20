@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container history-container">
+  <section class="card detail-page">
+    <div class="detail-header">
+      <div>
+        <p class="eyebrow">Local Scan Detail</p>
+        <h1 class="title">{{ scan.target_url }}</h1>
+        <p class="detail-meta">
+          <strong>Scan type:</strong> {{ scan.scan_type }} |
+          <strong>Status:</strong> {{ scan.status }} |
+          <strong>Created:</strong> {{ scan.created_at }}
+        </p>
+      </div>
+
+      <div>
+        <a href="{{ url_for('local_scan_history') }}" class="btn-link btn-muted">
+          ← Back to History
+        </a>
+      </div>
+    </div>
+
+    <div class="severity-summary detail-summary">
+      <div class="sev-box sev-high">
+        <span class="sev-count">{{ severity_counts.high }}</span>
+        <span class="sev-label">High</span>
+      </div>
+      <div class="sev-box sev-medium">
+        <span class="sev-count">{{ severity_counts.medium }}</span>
+        <span class="sev-label">Medium</span>
+      </div>
+      <div class="sev-box sev-low">
+        <span class="sev-count">{{ severity_counts.low }}</span>
+        <span class="sev-label">Low</span>
+      </div>
+      <div class="sev-box sev-info">
+        <span class="sev-count">{{ severity_counts.info }}</span>
+        <span class="sev-label">Info</span>
+      </div>
+    </div>
+
+    <div class="scan-overview">
+      <div class="overview-card">
+        <h3>Total Findings</h3>
+        <p>{{ findings|length }}</p>
+      </div>
+      <div class="overview-card">
+        <h3>Target</h3>
+        <p>{{ scan.target_url }}</p>
+      </div>
+      <div class="overview-card">
+        <h3>Scan Source</h3>
+        <p>{{ scan.scan_type }}</p>
+      </div>
+    </div>
+
+    <div class="detail-findings">
+      <h2>Findings</h2>
+
+      {% if findings %}
+        <div class="findings-list">
+          {% for finding in findings %}
+            <div class="finding-row">
+              <div class="finding-head">
+                <span class="finding-type">{{ finding.get("type", "issue") }}</span>
+                <span class="severity-badge severity-{{ finding.get('severity', 'info')|lower }}">
+                  {{ finding.get("severity", "info")|upper }}
+                </span>
+              </div>
+
+              <div class="finding-detail">
+                {{ finding.get("detail", "No detail") }}
+              </div>
+
+              {% if finding.get("recommendation") %}
+                <div class="finding-recommendation">
+                  <strong>Recommendation:</strong> {{ finding.get("recommendation") }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No findings found for this scan.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}
