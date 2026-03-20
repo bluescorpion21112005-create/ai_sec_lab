@@ -356,15 +356,44 @@ def subscribe(plan):
     return redirect(url_for("dashboard"))
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 @login_required
 def home():
+    chart_counts = history_counts()
+    chart_json = json.dumps(chart_counts)
+
+    lab_case = LAST_LAB_CASE
+
+    return render_template(
+        "index.html",
+        result=None,
+        content="",
+        url="",
+        batch_urls="",
+        error=None,
+        status=None,
+        length=None,
+        source_label="",
+        highlighted_preview="",
+        batch_results=[],
+        chart_counts=chart_counts,
+        chart_json=chart_json,
+        badge_class_name=badge_class_name,
+        lab_case=lab_case,
+        lab_case_path="",
+        lab_sort="risk_desc",
+        lab_filter="",
+        user=current_user,
+    )
+@app.route("/analyze", methods=["POST"])
+@login_required
+def analyze():
     global LAST_LAB_CASE
 
     result = None
-    content = ""
-    url = ""
-    batch_urls = ""
+    content = request.form.get("content", "").strip()
+    url = request.form.get("url", "").strip()
+    batch_urls = request.form.get("batch_urls", "").strip()
     error = None
     status = None
     length = None
@@ -372,19 +401,12 @@ def home():
     highlighted_preview = ""
     batch_results = []
     lab_case = None
-    lab_case_path = ""
-    lab_sort = "risk_desc"
-    lab_filter = ""
+    lab_case_path = request.form.get("lab_case_path", "").strip()
+    lab_sort = request.form.get("lab_sort", "risk_desc").strip() or "risk_desc"
+    lab_filter = request.form.get("lab_filter", "").strip()
+    uploaded_files = request.files.getlist("files")
 
-    if request.method == "POST":
-        content = request.form.get("content", "").strip()
-        url = request.form.get("url", "").strip()
-        batch_urls = request.form.get("batch_urls", "").strip()
-        lab_case_path = request.form.get("lab_case_path", "").strip()
-        lab_sort = request.form.get("lab_sort", "risk_desc").strip() or "risk_desc"
-        lab_filter = request.form.get("lab_filter", "").strip()
-        uploaded_files = request.files.getlist("files")
-
+    try:
         if request.form.get("analyze_lab_case") == "1":
             if lab_case_path:
                 lab_result = analyze_case(lab_case_path)
@@ -399,36 +421,25 @@ def home():
                             if (
                                 q in p["label"].lower()
                                 or q in p["file"].lower()
-                                or any(
-                                    q in kw.lower() for kw in p.get("matched_sql", [])
-                                )
-                                or any(
-                                    q in kw.lower()
-                                    for kw in p.get("matched_suspicious", [])
-                                )
+                                or any(q in kw.lower() for kw in p.get("matched_sql", []))
+                                or any(q in kw.lower() for kw in p.get("matched_suspicious", []))
                             )
                         ]
 
                     if lab_sort == "risk_asc":
                         payloads.sort(key=lambda x: x.get("risk_score", 0))
                     elif lab_sort == "delta_desc":
-                        payloads.sort(
-                            key=lambda x: x.get("risk_delta", 0), reverse=True
-                        )
+                        payloads.sort(key=lambda x: x.get("risk_delta", 0), reverse=True)
                     elif lab_sort == "delta_asc":
                         payloads.sort(key=lambda x: x.get("risk_delta", 0))
                     elif lab_sort == "label":
                         payloads.sort(key=lambda x: x.get("label", ""))
                     else:
-                        payloads.sort(
-                            key=lambda x: x.get("risk_score", 0), reverse=True
-                        )
+                        payloads.sort(key=lambda x: x.get("risk_score", 0), reverse=True)
 
                     baseline_text = lab_result.get("baseline_text", "")
                     for p in payloads:
-                        p["diff_html"] = build_diff_html(
-                            baseline_text, p.get("text", "")
-                        )
+                        p["diff_html"] = build_diff_html(baseline_text, p.get("text", ""))
 
                     lab_result["payloads"] = payloads
                     lab_case = lab_result
@@ -505,9 +516,7 @@ def home():
                     )
 
             if batch_results:
-                top_item = next(
-                    (x for x in batch_results if x["label"] != "FAILED"), None
-                )
+                top_item = next((x for x in batch_results if x["label"] != "FAILED"), None)
                 if top_item:
                     result = {
                         "label": top_item["label"],
@@ -559,7 +568,7 @@ def home():
                 status = "LOCAL"
                 length = len(first_text)
                 source_label = valid_files[0].filename
-                highlighted_preview = Markup(clip_text(result["highlighted_text"]))
+                highlighted_preview = clip_text(result["highlighted_text"])
 
         elif url:
             scan_result = scan_url(url)
@@ -569,7 +578,7 @@ def home():
                 status = scan_result["status"]
                 length = scan_result["length"]
                 source_label = url
-                highlighted_preview = Markup(result["highlighted_text"][:4000])
+                highlighted_preview = clip_text(result["highlighted_text"])
                 add_to_history(
                     url,
                     result["label"],
@@ -586,7 +595,7 @@ def home():
             status = "LOCAL"
             length = len(content)
             source_label = "pasted_text"
-            highlighted_preview = Markup(clip_text(result["highlighted_text"]))
+            highlighted_preview = clip_text(result["highlighted_text"])
             add_to_history(
                 "pasted_text",
                 result["label"],
@@ -598,6 +607,10 @@ def home():
 
         else:
             error = "Please provide a URL, batch URLs, response text, or upload one or more files."
+
+    except Exception as e:
+        print("ANALYZE ERROR:", e)
+        error = f"Unexpected error: {str(e)}"
 
     chart_counts = history_counts()
     chart_json = json.dumps(chart_counts)
@@ -626,7 +639,6 @@ def home():
         lab_filter=lab_filter,
         user=current_user,
     )
-
 
 @app.route("/history")
 @login_required

@@ -84,7 +84,7 @@
         <div class="panel-grid">
           <section class="card">
             <h2 class="section-title">SQL Error Detector</h2>
-            <form method="post" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data">
               <input type="hidden" name="tool_type" value="sql">
 
               <div class="form-block">
