@@ -1,28 +1,290 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-  <section class="card" style="max-width: 900px; margin: 40px auto;">
-    <h1 class="title">Desktop Agent Download</h1>
-    <p style="margin-top: 10px;">
-      Localhost va local network saytlarni xavfsizlik bo‘yicha tekshirish uchun
-      AI Security Lab Desktop Agent dasturini yuklab oling.
-    </p>
+<div class="container" style="min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center;">
+  <section class="card" style="max-width: 900px; margin: 40px auto; position: relative; overflow: hidden;">
+    <!-- Neon Glow Effect -->
+    <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, transparent 70%); pointer-events: none; z-index: 0;"></div>
+    
+    <div style="position: relative; z-index: 2;">
+      <h1 class="title" style="text-align: center; font-size: 2.5rem; background: linear-gradient(135deg, #00ffff, #00ccff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 30px rgba(0, 255, 255, 0.3);">
+        <i class="fas fa-download" style="margin-right: 15px; color: #00ffff;"></i>
+        Desktop Agent Download
+      </h1>
+      
+      <p style="margin-top: 20px; text-align: center; font-size: 1.1rem; color: #ccc; border-left: 3px solid #00ffff; padding-left: 20px; background: rgba(0, 255, 255, 0.05); border-radius: 8px; padding: 15px;">
+        <i class="fas fa-shield-halved" style="color: #00ffff; margin-right: 10px;"></i>
+        Localhost va local network saytlarni xavfsizlik bo‘yicha tekshirish uchun
+        AI Security Lab Desktop Agent dasturini yuklab oling.
+      </p>
 
-    <div style="margin-top: 24px;">
-      <a href="{{ url_for('download_desktop_agent') }}" class="btn-link btn-primary">
-        Windows uchun yuklab olish
-      </a>
-    </div>
+      <!-- Download Button with Cyber Effect -->
+      <div style="margin-top: 35px; text-align: center;">
+        <a href="{{ url_for('download_desktop_agent') }}" class="btn-download" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 15px;
+          padding: 16px 40px;
+          background: linear-gradient(135deg, #00ffff, #00ccff, #0099ff);
+          border: none;
+          border-radius: 50px;
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #000;
+          text-decoration: none;
+          box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 255, 0.3);
+          transition: all 0.3s ease;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+        ">
+          <i class="fab fa-windows" style="font-size: 1.5rem;"></i>
+          Windows uchun yuklab olish
+          <i class="fas fa-arrow-down"></i>
+          <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent); animation: btnShine 2s infinite;"></div>
+        </a>
+      </div>
 
-    <div style="margin-top: 30px;">
-      <h3>Qanday ishlatiladi?</h3>
-      <p>1. Desktop Agent dasturini yuklab oling</p>
-      <p>2. Uni ishga tushiring</p>
-      <p>3. Dashboarddan API tokenni oling</p>
-      <p>4. Local URL ni kiriting</p>
-      <p>5. Scan qiling va natijani cloudga yuboring</p>
+      <!-- How to Use Section -->
+      <div style="margin-top: 50px;">
+        <h3 style="color: #00ffff; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 10px;">
+          <i class="fas fa-question-circle"></i>
+          Qanday ishlatiladi?
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 25px;">
+          <!-- Step 1 -->
+          <div class="step-card" style="
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+          ">
+            <div style="
+              width: 50px;
+              height: 50px;
+              background: linear-gradient(135deg, #00ffff, #00ccff);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 15px;
+              font-size: 1.5rem;
+              font-weight: bold;
+              color: #000;
+              box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            ">1</div>
+            <i class="fas fa-download" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px; display: block;"></i>
+            <p style="color: #fff; font-weight: 500;">Desktop Agent dasturini yuklab oling</p>
+            <p style="color: #888; font-size: 0.85rem; margin-top: 8px;">Windows uchun installer fayl</p>
+          </div>
+          
+          <!-- Step 2 -->
+          <div class="step-card" style="
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+          ">
+            <div style="
+              width: 50px;
+              height: 50px;
+              background: linear-gradient(135deg, #00ffff, #00ccff);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 15px;
+              font-size: 1.5rem;
+              font-weight: bold;
+              color: #000;
+              box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            ">2</div>
+            <i class="fas fa-play" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px; display: block;"></i>
+            <p style="color: #fff; font-weight: 500;">Uni ishga tushiring</p>
+            <p style="color: #888; font-size: 0.85rem; margin-top: 8px;">Administrator sifatida ishga tushiring</p>
+          </div>
+          
+          <!-- Step 3 -->
+          <div class="step-card" style="
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+          ">
+            <div style="
+              width: 50px;
+              height: 50px;
+              background: linear-gradient(135deg, #00ffff, #00ccff);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 15px;
+              font-size: 1.5rem;
+              font-weight: bold;
+              color: #000;
+              box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            ">3</div>
+            <i class="fas fa-key" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px; display: block;"></i>
+            <p style="color: #fff; font-weight: 500;">Dashboarddan API tokenni oling</p>
+            <p style="color: #888; font-size: 0.85rem; margin-top: 8px;">Hisobingizdagi token orqali ulaning</p>
+          </div>
+          
+          <!-- Step 4 -->
+          <div class="step-card" style="
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+          ">
+            <div style="
+              width: 50px;
+              height: 50px;
+              background: linear-gradient(135deg, #00ffff, #00ccff);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 15px;
+              font-size: 1.5rem;
+              font-weight: bold;
+              color: #000;
+              box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            ">4</div>
+            <i class="fas fa-globe" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px; display: block;"></i>
+            <p style="color: #fff; font-weight: 500;">Local URL ni kiriting</p>
+            <p style="color: #888; font-size: 0.85rem; margin-top: 8px;">Masalan: http://localhost:3000</p>
+          </div>
+          
+          <!-- Step 5 -->
+          <div class="step-card" style="
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+          ">
+            <div style="
+              width: 50px;
+              height: 50px;
+              background: linear-gradient(135deg, #00ffff, #00ccff);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 15px;
+              font-size: 1.5rem;
+              font-weight: bold;
+              color: #000;
+              box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            ">5</div>
+            <i class="fas fa-chart-line" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px; display: block;"></i>
+            <p style="color: #fff; font-weight: 500;">Scan qiling va natijani cloudga yuboring</p>
+            <p style="color: #888; font-size: 0.85rem; margin-top: 8px;">Natijalar dashboardda ko'rinadi</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Info Box -->
+      <div style="margin-top: 40px; background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 100, 255, 0.05)); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center;">
+        <i class="fas fa-info-circle" style="color: #00ffff; font-size: 1.5rem; margin-bottom: 10px; display: inline-block;"></i>
+        <h4 style="color: #00ffff; margin-bottom: 10px;">Nima uchun Desktop Agent?</h4>
+        <p style="color: #ccc; font-size: 0.9rem;">
+          Desktop Agent dasturi localhost (127.0.0.1) va local network manzillarini skanerlash imkonini beradi.<br>
+          Bu sizga o'z loyihalaringizni xavfsizlik nuqtai nazaridan tekshirish imkoniyatini yaratadi.
+        </p>
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <span style="background: rgba(0, 255, 255, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: #00ffff;">
+            <i class="fas fa-check"></i> SQL Injection Test
+          </span>
+          <span style="background: rgba(0, 255, 255, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: #00ffff;">
+            <i class="fas fa-check"></i> XSS Detection
+          </span>
+          <span style="background: rgba(0, 255, 255, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: #00ffff;">
+            <i class="fas fa-check"></i> AI Risk Analysis
+          </span>
+          <span style="background: rgba(0, 255, 255, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: #00ffff;">
+            <i class="fas fa-check"></i> Cloud Sync
+          </span>
+        </div>
+      </div>
     </div>
   </section>
 </div>
+
+<style>
+  /* Hover effects for step cards */
+  .step-card:hover {
+    transform: translateY(-5px);
+    border-color: #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  }
+  
+  /* Button shine animation */
+  @keyframes btnShine {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+  }
+  
+  .btn-download:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 50px rgba(0, 255, 255, 0.5);
+  }
+  
+  .btn-download:active {
+    transform: translateY(0);
+  }
+  
+  /* Title gradient animation */
+  @keyframes titleGlow {
+    0% { text-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+    100% { text-shadow: 0 0 20px rgba(0, 255, 255, 0.6); }
+  }
+  
+  .title {
+    animation: titleGlow 2s ease-in-out infinite alternate;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .step-card {
+      margin-bottom: 15px;
+    }
+    
+    .btn-download {
+      padding: 12px 25px;
+      font-size: 1rem;
+    }
+    
+    .title {
+      font-size: 1.8rem !important;
+    }
+  }
+</style>
+
+<script>
+  // Add hover sound effect (optional - cyber feel)
+  document.querySelectorAll('.step-card, .btn-download').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      // Optional: You can add a subtle sound effect here
+      console.log('Cyber hover effect');
+    });
+  });
+</script>
 {% endblock %}

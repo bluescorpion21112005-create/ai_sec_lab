@@ -24,7 +24,7 @@ from config import (
     EXPORT_LAST_REPORT_JSON,
     EXPORT_LAB_CSV,
 )
-from models import db, User, Project, ScanRecord, Subscription, LocalScanResult
+from models import db, User, Project, ScanRecord, Subscription, LocalScanResult, ApiUsage, SiteMonitor, PaymentTransaction
 from auth import auth_bp
 from report_builder import save_lab_report_json, save_lab_report_csv
 from functools import wraps
@@ -125,21 +125,6 @@ def feature_required(feature_name):
             return func(*args, **kwargs)
 
         return wrapper
-
-    return decorator
-
-
-def feature_required(feature_name):
-    def decorator(f):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            if current_user.subscription_plan != "pro":
-                flash("Faqat Pro subscription uchun.", "danger")
-                return redirect(url_for("dashboard"))
-            return f(*args, **kwargs)
-
-        return wrapped
-
     return decorator
 
 
@@ -202,6 +187,14 @@ def normalize_pentest_result(scan_result: dict) -> dict:
     }
 
 
+def has_pro_access(user):
+    return user.is_authenticated and user.subscription_status == "active" and user.subscription_plan in ["pro", "corporate"]
+
+
+def has_corporate_access(user):
+    return user.is_authenticated and user.subscription_status == "active" and user.subscription_plan == "corporate"
+
+
 def add_to_history(
     source: str,
     label: str,
@@ -260,6 +253,29 @@ def build_diff_html(baseline_text: str, payload_text: str) -> str:
     return "\n".join(rendered)
 
 
+def activate_user_plan(user, plan):
+    now = datetime.utcnow()
+
+    user.subscription_plan = plan
+    user.subscription_status = "active"
+
+    if user.subscription_end and user.subscription_end > now:
+        user.subscription_end = user.subscription_end + timedelta(days=30)
+    else:
+        user.subscription_start = now
+        user.subscription_end = now + timedelta(days=30)
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash("Admin access required.", "danger")
+            return redirect(url_for("dashboard"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def history_counts():
     counts = {"normal": 0, "suspicious": 0, "sql_error": 0, "total": len(SCAN_HISTORY)}
     for item in SCAN_HISTORY:
@@ -272,13 +288,44 @@ def history_counts():
     return counts
 
 
+def is_subscription_active(user):
+    if not user or user.subscription_status != "active":
+        return False
+
+    if user.subscription_end and user.subscription_end < datetime.utcnow():
+        user.subscription_status = "expired"
+        db.session.commit()
+        return False
+
+    return True
+
+
+def check_api_limit(user, endpoint, limit=200):
+    since = datetime.utcnow() - timedelta(days=30)
+    count = ApiUsage.query.filter(
+        ApiUsage.user_id == user.id,
+        ApiUsage.endpoint == endpoint,
+        ApiUsage.created_at >= since
+    ).count()
+    return count < limit
+
+
+def log_api_usage(user, endpoint):
+    usage = ApiUsage(user_id=user.id, endpoint=endpoint)
+    db.session.add(usage)
+    db.session.commit()
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+
 @app.route("/download")
 def download_page():
     return render_template("download.html")
+
+
 @app.route("/regenerate-api-token", methods=["POST"])
 @login_required
 def regenerate_api_token():
@@ -286,6 +333,28 @@ def regenerate_api_token():
     db.session.commit()
     flash("API token muvaffaqiyatli yangilandi.", "success")
     return redirect(url_for("dashboard"))
+
+
+@app.route("/admin")
+@login_required
+@admin_required
+def admin_panel():
+    users = User.query.order_by(User.id.desc()).all()
+    payments = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(20).all()
+    scans = LocalScanResult.query.order_by(LocalScanResult.created_at.desc()).limit(20).all()
+
+    return render_template("admin.html", users=users, payments=payments, scans=scans)
+
+
+@app.route("/site-monitoring")
+@login_required
+def site_monitoring():
+    if not has_corporate_access(current_user):
+        flash("Bu bo‘lim faqat aktiv Corporate tarif uchun mavjud.", "danger")
+        return redirect(url_for("dashboard"))
+
+    monitors = SiteMonitor.query.filter_by(user_id=current_user.id).all()
+    return render_template("site_monitoring.html", monitors=monitors)
 
 
 @app.route("/download-desktop-agent")
@@ -332,6 +401,9 @@ def pricing():
 @login_required
 @feature_required("batch_scan")
 def batch_scan():
+    if current_user.subscription_status != "active" or current_user.subscription_plan not in ["pro", "corporate"]:
+        flash("Bu bo'lim faqat Pro yoki Corporate tarif uchun mavjud.", "danger")
+        return redirect(url_for("dashboard"))
     return render_template("batch_scan.html")
 
 
@@ -339,6 +411,9 @@ def batch_scan():
 @login_required
 @feature_required("api_access")
 def api_docs():
+    if current_user.subscription_status != "active" or current_user.subscription_plan != "corporate":
+        flash("Bu bo'lim faqat Corporate tarif uchun mavjud.", "danger")
+        return redirect(url_for("dashboard"))
     return render_template("api_docs.html")
 
 
@@ -377,6 +452,8 @@ def subscribe(plan):
     db.session.commit()
     flash(f"{plan} plan activated", "success")
     return redirect(url_for("dashboard"))
+
+
 @app.route("/local-scan/<int:scan_id>")
 @login_required
 def local_scan_detail(scan_id):
@@ -410,6 +487,8 @@ def local_scan_detail(scan_id):
         findings=findings,
         severity_counts=severity_counts
     )
+
+
 @app.route("/local-scan-history")
 @login_required
 def local_scan_history():
@@ -477,10 +556,12 @@ def local_scan_history():
         severity_filter=severity_filter,
         sort_order=sort_order
     )
+
+
 @app.route("/api/submit-local-scan", methods=["POST"])
 def submit_local_scan():
     auth_header = request.headers.get("Authorization", "").strip()
-
+    
     if not auth_header.startswith("Bearer "):
         return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
@@ -489,6 +570,12 @@ def submit_local_scan():
 
     if not user:
         return jsonify({"status": "error", "message": "Invalid API token"}), 401
+
+    # API limit tekshiruvi
+    if not check_api_limit(user, "submit_local_scan", limit=200):
+        return jsonify({"status": "error", "message": "API limit exceeded"}), 429
+    
+    log_api_usage(user, "submit_local_scan")
 
     data = request.get_json() or {}
 
@@ -519,6 +606,7 @@ def submit_local_scan():
         "scan_id": scan.id
     })
 
+
 @app.route("/", methods=["GET"])
 @login_required
 def home():
@@ -548,6 +636,8 @@ def home():
         lab_filter="",
         user=current_user,
     )
+
+
 @app.route("/analyze", methods=["POST"])
 @login_required
 def analyze():
@@ -802,6 +892,7 @@ def analyze():
         lab_filter=lab_filter,
         user=current_user,
     )
+
 
 @app.route("/history")
 @login_required

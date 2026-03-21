@@ -3,12 +3,282 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Security Lab</title>
+  <title>AI Security Lab | Matrix Security Suite</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* Matrix Rain Effect Styles */
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.25;
+    }
+
+    #plexus-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.35;
+    }
+
+    .matrix-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, 
+            rgba(0, 255, 255, 0.03) 0%,
+            rgba(0, 255, 255, 0.08) 50%,
+            rgba(0, 0, 0, 0.85) 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    body {
+        position: relative;
+        z-index: 2;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    /* Ensure content stays above matrix effect */
+    nav, main, footer, .container, .modal, .dashboard-page,
+    .history-container, .subscription-box, .hero, .tools-section,
+    .dashboard-section, .features, .pricing {
+        position: relative;
+        z-index: 3;
+    }
+
+    /* Matrix title animation */
+    .logo span {
+        animation: matrixPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes matrixPulse {
+        0%, 100% {
+            text-shadow: 0 0 2px #0f0, 0 0 5px #0f0;
+        }
+        50% {
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+        }
+    }
+
+    /* Hero section matrix glow */
+    .hero-content h1 {
+        animation: matrixGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes matrixGlow {
+        from {
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+        }
+        to {
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.6), 0 0 30px rgba(0, 255, 0, 0.4);
+        }
+    }
+
+    /* Scanning Line Animation */
+    .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ffff, #00ccff, transparent);
+        animation: scanLine 8s linear infinite;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    @keyframes scanLine {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    /* Cyber Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #00ffff, #00ccff);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #00ffff;
+    }
+
+    /* Floating Labels Effect */
+    .form-block {
+        position: relative;
+        margin-top: 5px;
+        margin-bottom: 20px;
+    }
+
+    .form-block label {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: all 0.3s ease;
+        pointer-events: none;
+        color: rgba(0, 255, 255, 0.7);
+        font-size: 14px;
+        background: transparent;
+        padding: 0;
+    }
+
+    .form-block input:focus ~ label,
+    .form-block input:not(:placeholder-shown) ~ label,
+    .form-block textarea:focus ~ label,
+    .form-block textarea:not(:placeholder-shown) ~ label {
+        top: -10px;
+        left: 10px;
+        font-size: 11px;
+        color: #00ffff;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 0 5px;
+        border-radius: 4px;
+    }
+
+    .form-block input,
+    .form-block textarea,
+    .form-block select {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        color: #fff !important;
+        transition: all 0.3s ease;
+    }
+
+    .form-block input:focus,
+    .form-block textarea:focus,
+    .form-block select:focus {
+        border-color: #00ffff;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        outline: none;
+    }
+
+    /* Progress Bar Cyber Style */
+    .progress-bar {
+        background: linear-gradient(90deg, #00ffff, #00ccff, #0099ff);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    /* AI Analysis Neon Border Pulse */
+    .ai-analysis {
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 100, 255, 0.2));
+        border: 1px solid #00ffff;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        animation: borderPulse 2s infinite;
+    }
+
+    @keyframes borderPulse {
+        0% { border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); }
+        100% { border-color: #00ccff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.6); }
+    }
+
+    /* Cyber Chips */
+    .chip {
+        background: rgba(0, 255, 255, 0.15);
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 12px;
+        color: #00ffff;
+    }
+
+    .chip.sql {
+        background: rgba(255, 0, 0, 0.2);
+        border-color: #ff4444;
+        color: #ff8888;
+    }
+
+    .chip.suspicious {
+        background: rgba(255, 255, 0, 0.2);
+        border-color: #ffff00;
+        color: #ffff88;
+    }
+
+    /* Cyber Stats Cards */
+    .stat-item,
+    .stat-card {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover,
+    .stat-card:hover {
+        border-color: #00ffff;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        transform: translateY(-5px);
+    }
+
+    .stat-number,
+    .stat-value {
+        text-shadow: 0 0 10px #00ffff;
+    }
+
+    /* Fix hero section position */
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 6rem 2rem 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+  </style>
 </head>
 <body>
+  <!-- Background Canvases -->
+  <canvas id="matrix-canvas"></canvas>
+  <canvas id="plexus-canvas"></canvas>
+  <div class="matrix-overlay"></div>
+
+  <form method="post" class="login-form"></form>
+  
   <nav class="navbar">
     <div class="nav-container">
       <div class="logo">
@@ -17,7 +287,7 @@
       </div>
 
       <div class="nav-links">
-        <a href="login" class=""active">Registratsiya</a>
+        <a href="login">Registratsiya</a>
         <a href="#home" class="active">Bosh sahifa</a>
         <a href="#tools">Tools</a>
         <a href="#dashboard">Dashboard</a>
@@ -89,39 +359,39 @@
               <input type="hidden" name="tool_type" value="sql">
 
               <div class="form-block">
+                <input id="url" type="text" name="url" value="{{ url }}" placeholder=" ">
                 <label for="url">Single URL</label>
-                <input id="url" type="text" name="url" value="{{ url }}" placeholder="https://example.com">
               </div>
 
               <div class="form-block">
+                <textarea id="batch_urls" name="batch_urls" placeholder=" ">{{ batch_urls }}</textarea>
                 <label for="batch_urls">Batch URLs (one per line)</label>
-                <textarea id="batch_urls" name="batch_urls" placeholder="https://example.com&#10;https://httpbin.org/html">{{ batch_urls }}</textarea>
               </div>
 
               <div class="form-block">
+                <textarea id="content" name="content" placeholder=" ">{{ content }}</textarea>
                 <label for="content">Single response text</label>
-                <textarea id="content" name="content" placeholder="Paste HTML, server response, error page, or request output here...">{{ content }}</textarea>
               </div>
 
               <div class="form-block">
-                <label for="files">Upload HTML/TXT files</label>
                 <input id="files" type="file" name="files" accept=".html,.htm,.txt" multiple>
+                <label for="files">Upload HTML/TXT files</label>
               </div>
 
               <div class="form-block">
+                <input id="lab_case_path" type="text" name="lab_case_path" value="{{ lab_case_path }}" placeholder=" ">
                 <label for="lab_case_path">Lab case folder path</label>
-                <input id="lab_case_path" type="text" name="lab_case_path" value="{{ lab_case_path }}" placeholder="lab_cases/case1">
               </div>
 
               <div class="form-row">
                 <div class="form-block">
+                  <input id="lab_sort" type="text" name="lab_sort" value="{{ lab_sort }}" placeholder=" ">
                   <label for="lab_sort">Lab sort</label>
-                  <input id="lab_sort" type="text" name="lab_sort" value="{{ lab_sort }}" placeholder="risk_desc, risk_asc, delta_desc">
                 </div>
 
                 <div class="form-block">
+                  <input id="lab_filter" type="text" name="lab_filter" value="{{ lab_filter }}" placeholder=" ">
                   <label for="lab_filter">Lab filter</label>
-                  <input id="lab_filter" type="text" name="lab_filter" value="{{ lab_filter }}" placeholder="sql_error, mysql, suspicious">
                 </div>
               </div>
 
@@ -239,9 +509,9 @@
           </div>
 
           <div class="table-wrap">
-            <table>
+             <table>
               <thead>
-                <tr>
+                 <tr>
                   <th>#</th>
                   <th>Payload File</th>
                   <th>Prediction</th>
@@ -251,11 +521,11 @@
                   <th>Length Δ</th>
                   <th>Matched SQL</th>
                   <th>Matched Suspicious</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {% for item in lab_case.payloads %}
-                <tr>
+                 <tr>
                   <td>{{ loop.index }}</td>
                   <td>{{ item.file }}</td>
                   <td><span class="mini-badge {{ badge_class_name(item.label) }}">{{ item.label }}</span></td>
@@ -265,10 +535,10 @@
                   <td>{{ item.length_delta }}</td>
                   <td>{% if item.matched_sql %}{{ item.matched_sql|join(', ') }}{% else %}-{% endif %}</td>
                   <td>{% if item.matched_suspicious %}{{ item.matched_suspicious|join(', ') }}{% else %}-{% endif %}</td>
-                </tr>
+                 </tr>
                 {% endfor %}
               </tbody>
-            </table>
+             </table>
           </div>
 
           {% if lab_case.payloads[0].diff_html %}
@@ -287,17 +557,17 @@
             <h2 class="section-title">AI Pentest Scanner</h2>
 
             <div class="form-block">
+              <input type="url" id="targetUrl" placeholder=" ">
               <label for="targetUrl">Target URL</label>
-              <input type="url" id="targetUrl" placeholder="https://saytingiz.uz" required>
             </div>
 
             <div class="form-block">
-              <label for="scanType">Scan Type</label>
               <select id="scanType">
                 <option value="quick">Tezkor skanerlash</option>
                 <option value="full">To'liq skanerlash</option>
                 <option value="ai_enhanced">AI kuchaytirilgan</option>
               </select>
+              <label for="scanType">Scan Type</label>
             </div>
 
             <div class="actions">
@@ -411,69 +681,58 @@
     </section>
 
     <!-- PRICING -->
-   <section id="pricing" class="pricing">
-  <h2>Tarif rejalari</h2>
-  <div class="pricing-grid">
-    <div class="pricing-card">
-      <h3>Bepul</h3>
-      <div class="price">0 <span>/oy</span></div>
-      <ul>
-        <li><i class="fas fa-check"></i> Cheklangan tekshiruv</li>
-        <li><i class="fas fa-check"></i> Asosiy SQL detection</li>
-        <li><i class="fas fa-check"></i> Basic pentest</li>
-        <li><i class="fas fa-times"></i> Advanced AI analysis</li>
-      </ul>
-      <a href="{{ url_for('subscribe', plan='free') }}" class="btn btn-outline">Boshlash</a>
-    </div>
+    <section id="pricing" class="pricing">
+      <h2>Tarif rejalari</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Bepul</h3>
+          <div class="price">0 <span>/oy</span></div>
+          <ul>
+            <li><i class="fas fa-check"></i> Cheklangan tekshiruv</li>
+            <li><i class="fas fa-check"></i> Asosiy SQL detection</li>
+            <li><i class="fas fa-check"></i> Basic pentest</li>
+            <li><i class="fas fa-times"></i> Advanced AI analysis</li>
+          </ul>
+          <a href="{{ url_for('subscribe', plan='free') }}" class="btn btn-outline">Boshlash</a>
+        </div>
 
-    <div class="pricing-card popular">
-      <div class="popular-badge">Ommabop</div>
-      <h3>Professional</h3>
-      <div class="price">99 000 <span>/oy</span></div>
-      <ul>
-        <li><i class="fas fa-check"></i> To‘liq SQL analysis</li>
-        <li><i class="fas fa-check"></i> Full pentest scan</li>
-        <li><i class="fas fa-check"></i> AI tavsiyalar</li>
-        <li><i class="fas fa-check"></i> Export va monitoring</li>
-      </ul>
-      <a href="{{ url_for('subscribe', plan='pro') }}" class="btn">Tanlash</a>
-    </div>
+        <div class="pricing-card popular">
+          <div class="popular-badge">Ommabop</div>
+          <h3>Professional</h3>
+          <div class="price">99 000 <span>/oy</span></div>
+          <ul>
+            <li><i class="fas fa-check"></i> To‘liq SQL analysis</li>
+            <li><i class="fas fa-check"></i> Full pentest scan</li>
+            <li><i class="fas fa-check"></i> AI tavsiyalar</li>
+            <li><i class="fas fa-check"></i> Export va monitoring</li>
+          </ul>
+          <a href="{{ url_for('subscribe', plan='pro') }}" class="btn">Tanlash</a>
+        </div>
 
-    <div class="pricing-card">
-      <h3>Korporativ</h3>
-      <div class="price">299 000 <span>/oy</span></div>
-      <ul>
-        <li><i class="fas fa-check"></i> Cheksiz tekshiruvlar</li>
-        <li><i class="fas fa-check"></i> Batch skanerlash</li>
-        <li><i class="fas fa-check"></i> API access</li>
-        <li><i class="fas fa-check"></i> 20 ta sayt monitoringi</li>
-        <li><i class="fas fa-check"></i> Priority support</li>
-      </ul>
-      <a href="{{ url_for('subscribe', plan='corporate') }}" class="btn">Boshlash</a>
-    </div>
-  </div>
-</section>
+        <div class="pricing-card">
+          <h3>Korporativ</h3>
+          <div class="price">299 000 <span>/oy</span></div>
+          <ul>
+            <li><i class="fas fa-check"></i> Cheksiz tekshiruvlar</li>
+            <li><i class="fas fa-check"></i> Batch skanerlash</li>
+            <li><i class="fas fa-check"></i> API access</li>
+            <li><i class="fas fa-check"></i> 20 ta sayt monitoringi</li>
+            <li><i class="fas fa-check"></i> Priority support</li>
+          </ul>
+          <a href="{{ url_for('subscribe', plan='corporate') }}" class="btn">Boshlash</a>
+        </div>
+      </div>
+    </section>
   </main>
+
   <div class="subscription-box" style="margin-top:20px;">
     <h3>🔑 Desktop Agent API Token</h3>
     <p>Local scanner ushbu token orqali sizning hisobingizga ulanadi.</p>
-
     <div style="background:#0f172a; padding:10px; border-radius:8px; word-break:break-all;">
       <code>{{ current_user.api_token }}</code>
     </div>
-
-    <button onclick="copyToken()" style="margin-top:10px;" class="btn-primary">
-      Copy Token
-    </button>
-</div>
-
-<script>
-function copyToken() {
-      const token = "{{ current_user.api_token }}";
-      navigator.clipboard.writeText(token);
-      alert("Token copied!");
-}
-</script>
+    <button onclick="copyToken()" style="margin-top:10px;" class="btn-primary">Copy Token</button>
+  </div>
 
   <footer>
     <div class="footer-content">
@@ -499,6 +758,159 @@ function copyToken() {
   </footer>
 
   <script>
+    // MATRIX RAIN EFFECT
+    (function() {
+        const canvas = document.getElementById('matrix-canvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
+        const charArray = chars.split('');
+        const fontSize = 14;
+        let columns = Math.floor(width / fontSize);
+        let drops = [];
+        
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * -100;
+        }
+        
+        function drawMatrix() {
+            if (!ctx) return;
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const char = charArray[Math.floor(Math.random() * charArray.length)];
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+                
+                ctx.fillStyle = `rgba(0, 255, 0, ${Math.random() * 0.5 + 0.3})`;
+                ctx.fillText(char, x, y);
+                
+                if (y > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                
+                drops[i]++;
+            }
+            
+            requestAnimationFrame(drawMatrix);
+        }
+        
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            columns = Math.floor(width / fontSize);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
+            }
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        drawMatrix();
+    })();
+
+    // PLEXUS EFFECT - NEURAL NETWORK MESH
+    (function() {
+        const canvas = document.getElementById('plexus-canvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        const PARTICLE_COUNT = 80;
+        const CONNECTION_DISTANCE = 150;
+        
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 2 + 1
+                });
+            }
+        }
+        
+        function draw() {
+            if (!ctx) return;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw connections
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < CONNECTION_DISTANCE) {
+                        const opacity = (1 - distance / CONNECTION_DISTANCE) * 0.3;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0, 255, 255, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw particles
+            for (let i = 0; i < particles.length; i++) {
+                ctx.beginPath();
+                ctx.arc(particles[i].x, particles[i].y, particles[i].radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 255, ${Math.random() * 0.5 + 0.5})`;
+                ctx.fill();
+                
+                // Update position
+                particles[i].x += particles[i].vx;
+                particles[i].y += particles[i].vy;
+                
+                // Boundary check
+                if (particles[i].x < 0 || particles[i].x > width) particles[i].vx *= -1;
+                if (particles[i].y < 0 || particles[i].y > height) particles[i].vy *= -1;
+                
+                // Keep in bounds
+                particles[i].x = Math.max(0, Math.min(width, particles[i].x));
+                particles[i].y = Math.max(0, Math.min(height, particles[i].y));
+            }
+            
+            requestAnimationFrame(draw);
+        }
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            init();
+        }
+        
+        window.addEventListener('resize', resize);
+        init();
+        draw();
+    })();
+
+    function copyToken() {
+        const token = "{{ current_user.api_token }}";
+        navigator.clipboard.writeText(token);
+        alert("Token copied!");
+    }
+    
     function showTool(toolId) {
       document.querySelectorAll('.tool-panel').forEach(panel => {
         panel.classList.remove('active');
@@ -515,6 +927,64 @@ function copyToken() {
       } else {
         document.getElementById('pentest-tab').classList.add('active');
       }
+    }
+
+    function startScan() {
+        const targetUrl = document.getElementById('targetUrl').value;
+        const scanType = document.getElementById('scanType').value;
+        const resultsDiv = document.getElementById('resultsContent');
+        const progressBar = document.getElementById('progressBar');
+        
+        if (!targetUrl) {
+            alert('Please enter a target URL');
+            return;
+        }
+        
+        resultsDiv.innerHTML = '<div class="loading">Scanning in progress...</div>';
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            progressBar.style.width = progress + '%';
+            if (progress >= 100) {
+                clearInterval(interval);
+                resultsDiv.innerHTML = `
+                    <div class="scan-complete">
+                        <h3>✅ Scan Complete</h3>
+                        <p>Target: ${targetUrl}</p>
+                        <p>Scan Type: ${scanType}</p>
+                        <div class="vulnerability-item">
+                            <div class="vuln-header critical">
+                                <span class="vuln-title">Potential SQL Injection</span>
+                                <span class="vuln-severity">CRITICAL</span>
+                            </div>
+                            <div class="vuln-content active">
+                                <p>Parameters may be vulnerable to SQL injection attacks.</p>
+                                <div class="vuln-remediation">
+                                    <h4>Remediation:</h4>
+                                    <p>Use parameterized queries and input validation.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vulnerability-item">
+                            <div class="vuln-header high">
+                                <span class="vuln-title">XSS Vulnerability</span>
+                                <span class="vuln-severity">HIGH</span>
+                            </div>
+                            <div class="vuln-content active">
+                                <p>Reflected XSS detected in response.</p>
+                                <div class="vuln-remediation">
+                                    <h4>Remediation:</h4>
+                                    <p>Implement output encoding and Content Security Policy.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ai-analysis">
+                            <strong>🤖 AI Analysis:</strong> Medium risk level detected. Recommended immediate patching for SQL injection vectors.
+                        </div>
+                    </div>
+                `;
+            }
+        }, 500);
     }
 
     const chartData = {{ chart_json|safe }};

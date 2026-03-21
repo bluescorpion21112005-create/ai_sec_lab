@@ -1,142 +1,228 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="dashboard-page">
+<div class="dashboard-page" style="min-height: calc(100vh - 200px); padding: 40px 20px;">
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="flash-wrap">
+      <div class="flash-wrap" style="display: flex; justify-content: center; margin-bottom: 22px;">
         {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
+          <div class="flash flash-{{ category }}" style="padding: 14px 20px; border-radius: 14px; font-size: 15px; font-weight: 600; width: fit-content; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); background: {% if category == 'success' %}rgba(34, 197, 94, 0.18); color: #d1fae5; border: 1px solid rgba(34, 197, 94, 0.35);{% elif category == 'danger' %}rgba(239, 68, 68, 0.18); color: #fee2e2; border: 1px solid rgba(239, 68, 68, 0.35);{% else %}rgba(245, 158, 11, 0.18); color: #fef3c7; border: 1px solid rgba(245, 158, 11, 0.35);{% endif %}">
+            {{ message }}
+          </div>
         {% endfor %}
       </div>
     {% endif %}
   {% endwith %}
 
-  <section class="hero-section">
+  <!-- Hero Section with Cyber Effect -->
+  <section class="hero-section" style="text-align: center; max-width: 850px; margin: 0 auto 48px; padding-top: 20px; position: relative;">
     <div class="hero-content">
-      <p class="eyebrow">Xush kelibsiz, {{ current_user.full_name }}</p>
-      <h1 class="dashboard-title">Dashboard</h1>
-      <p class="dashboard-subtitle">
+      <p class="eyebrow" style="color: #8fb3ff; font-size: 15px; margin-bottom: 10px; letter-spacing: 0.5px;">
+        <i class="fas fa-user-astronaut" style="color: #00ffff;"></i> Xush kelibsiz, {{ current_user.full_name }}
+      </p>
+      <h1 class="dashboard-title" style="font-size: 56px; line-height: 1.1; font-weight: 800; margin-bottom: 14px; background: linear-gradient(135deg, #00ffff, #00ccff, #ff00ff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 30px rgba(0, 255, 255, 0.3); animation: titlePulse 2s ease-in-out infinite alternate;">
+        Dashboard
+      </h1>
+      <p class="dashboard-subtitle" style="color: #b7c2e0; font-size: 18px; line-height: 1.7; margin-bottom: 24px;">
         Subscription va premium funksiyalaringiz shu yerda boshqariladi.
       </p>
     </div>
+    
+    {% if current_user.subscription_status == "expired" %}
+      <div class="empty-state" style="max-width: 700px; margin: 0 auto 20px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); backdrop-filter: blur(12px); border-radius: 24px; padding: 40px 28px; text-align: center;">
+        <i class="fas fa-hourglass-end" style="font-size: 3rem; color: #ff4444; margin-bottom: 15px;"></i>
+        <h2 style="color: white;">Subscription expired</h2>
+        <p style="color: #cbd5e1;">Obunangiz muddati tugagan. Premium funksiyalarni davom ettirish uchun tarifni yangilang.</p>
+        <a href="{{ url_for('pricing') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 13px 24px; border-radius: 14px; margin-top: 20px; text-decoration: none;">Renew Subscription</a>
+      </div>
+    {% endif %}
 
-    <div class="hero-badges">
-      <div class="info-pill">
-        <span class="pill-label">Tarif rejangiz</span>
-        <span class="badge badge-{{ current_user.subscription_plan }}">
+    <div class="hero-badges" style="display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap;">
+      <div class="info-pill" style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 999px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); backdrop-filter: blur(12px);">
+        <span class="pill-label" style="color: #cbd5e1; font-size: 14px;">Tarif rejangiz</span>
+        <span class="badge badge-{{ current_user.subscription_plan }}" style="background: {% if current_user.subscription_plan == 'pro' %}linear-gradient(135deg, #00ffff, #00ccff){% elif current_user.subscription_plan == 'corporate' %}linear-gradient(135deg, #ff00ff, #cc00cc){% else %}rgba(100, 100, 100, 0.3){% endif %}; padding: 7px 14px; border-radius: 999px; color: {% if current_user.subscription_plan == 'free' %}#ccc{% else %}#000{% endif %}; font-weight: 700;">
           {{ current_user.subscription_plan|upper }}
         </span>
       </div>
-      <div class="info-pill">
-        <span class="pill-label">Status</span>
-        <span class="status-{{ current_user.subscription_status }}">
-          {{ current_user.subscription_status|capitalize }}
+      <div class="info-pill" style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 999px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); backdrop-filter: blur(12px);">
+        <span class="pill-label" style="color: #cbd5e1; font-size: 14px;">Status</span>
+        <span class="status-{{ current_user.subscription_status }}" style="color: {% if current_user.subscription_status == 'active' %}#86efac{% else %}#f87171{% endif %}; font-weight: 700;">
+          {% if current_user.subscription_status == 'active' %}<i class="fas fa-check-circle"></i> Faol{% else %}<i class="fas fa-times-circle"></i> No faol{% endif %}
         </span>
       </div>
     </div>
   </section>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <span class="stat-label">Total Scans</span>
-      <span class="stat-value">{{ total_scans }}</span>
+  <!-- Stats Grid with Cyber Effect -->
+  <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 16px; margin: 24px 0;">
+    <div class="stat-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s ease;">
+      <span class="stat-label" style="display: block; color: #9fb0d5; font-size: 13px; margin-bottom: 10px;">Total Scans</span>
+      <span class="stat-value" style="display: block; color: #00ffff; font-size: 28px; font-weight: 800; text-shadow: 0 0 10px #00ffff;">{{ total_scans }}</span>
     </div>
-    <div class="stat-card">
-      <span class="stat-label">Total Findings</span>
-      <span class="stat-value">{{ total_findings }}</span>
+    <div class="stat-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s ease;">
+      <span class="stat-label" style="display: block; color: #9fb0d5; font-size: 13px; margin-bottom: 10px;">Total Findings</span>
+      <span class="stat-value" style="display: block; color: #00ffff; font-size: 28px; font-weight: 800; text-shadow: 0 0 10px #00ffff;">{{ total_findings }}</span>
     </div>
-    <div class="stat-card">
-      <span class="stat-label">High Risk</span>
-      <span class="stat-value danger">{{ high_risk_findings }}</span>
+    <div class="stat-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s ease;">
+      <span class="stat-label" style="display: block; color: #9fb0d5; font-size: 13px; margin-bottom: 10px;">High Risk</span>
+      <span class="stat-value danger" style="display: block; color: #ff4444; font-size: 28px; font-weight: 800; text-shadow: 0 0 10px #ff4444;">{{ high_risk_findings }}</span>
     </div>
-    <div class="stat-card">
-      <span class="stat-label">Last Activity</span>
-      <span class="stat-value stat-small">
-        {{ last_scan_time if last_scan_time else "No scans yet" }}
+    <div class="stat-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s ease;">
+      <span class="stat-label" style="display: block; color: #9fb0d5; font-size: 13px; margin-bottom: 10px;">Last Activity</span>
+      <span class="stat-value stat-small" style="display: block; color: white; font-size: 15px; line-height: 1.5;">
+        {% if last_scan_time %}{{ last_scan_time.strftime('%Y-%m-%d %H:%M') }}{% else %}No scans yet{% endif %}
       </span>
     </div>
   </div>
 
-  <hr class="section-divider">
+  <hr class="section-divider" style="border-color: rgba(0, 255, 255, 0.3); margin: 30px 0;">
 
-  {% if current_user.subscription_plan in ['pro', 'corporate'] and current_user.subscription_status == "active" %}
-    <h2 class="section-title">Premium Tools</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>Batch Scan</h3>
-        <p>Ko‘p domenlarni bir vaqtda tezkor tekshirish.</p>
-        <a href="{{ url_for('batch_scan') }}" class="btn-primary">Open</a>
+  {# PREMIUM TEKSHIRUVI #}
+  {% if current_user.subscription_status == "active" and current_user.subscription_plan in ["pro", "corporate"] %}
+    <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 20px;">
+    
+      <div class="feature-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px 24px; text-align: center; transition: all 0.3s ease;">
+        <div class="feature-icon" style="width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00ffff, #00ccff); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 26px;">⚡</div>
+        <h3 style="color: white; font-size: 22px; margin-bottom: 10px;">Batch Scan</h3>
+        <p style="color: #ccc; font-size: 14px;">Ko‘p domenlarni bir vaqtda tez va qulay tekshirish.</p>
+        <a href="{{ url_for('batch_scan') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 12px; margin-top: 15px; text-decoration: none;">Open</a>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">📘</div>
-        <h3>API Docs</h3>
-        <p>Integratsiya uchun to‘liq yo‘riqnomalar.</p>
-        <a href="{{ url_for('api_docs') }}" class="btn-primary">Open</a>
+      <div class="feature-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px 24px; text-align: center; transition: all 0.3s ease;">
+        <div class="feature-icon" style="width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00ffff, #00ccff); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 26px;">📘</div>
+        <h3 style="color: white; font-size: 22px; margin-bottom: 10px;">API Docs</h3>
+        <p style="color: #ccc; font-size: 14px;">API hujjatlari va ulanish bo‘yicha yo‘riqnoma.</p>
+        <a href="{{ url_for('api_docs') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 12px; margin-top: 15px; text-decoration: none;">Open</a>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">📡</div>
-        <h3>Monitoring</h3>
-        <p>20 tagacha sayt doimiy nazorat ostida.</p>
-        <a href="{{ url_for('monitoring') }}" class="btn-primary">Open</a>
+      <div class="feature-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px 24px; text-align: center; transition: all 0.3s ease;">
+        <div class="feature-icon" style="width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00ffff, #00ccff); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 26px;">🎧</div>
+        <h3 style="color: white; font-size: 22px; margin-bottom: 10px;">Priority Support</h3>
+        <p style="color: #ccc; font-size: 14px;">Tezkor yordam va ustuvor qo‘llab-quvvatlash xizmati.</p>
+        <a href="{{ url_for('priority_support') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 12px; margin-top: 15px; text-decoration: none;">Open</a>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">💻</div>
-        <h3>Local History</h3>
-        <p>Desktop agent orqali yuborilgan natijalar.</p>
-        <a href="{{ url_for('local_scan_history') }}" class="btn-primary">Open</a>
-      </div>
-    </div>
-
-    <div class="token-section card">
-      <div class="token-header">
-        <h3>🔑 Desktop Agent API Token</h3>
-        <p>Local scanner ushbu token orqali sizning hisobingizga ulanadi.</p>
-      </div>
-      
-      <div class="token-box">
-        <code>{{ current_user.api_token }}</code>
-        <div class="token-actions">
-          <button onclick="copyToken()" class="btn-primary btn-sm">Copy Token</button>
-          <form method="post" action="{{ url_for('regenerate_api_token') }}" style="display:inline;">
-            <button type="submit" class="btn-outline btn-sm">Regenerate</button>
-          </form>
+      {% if current_user.subscription_plan == "corporate" %}
+        <div class="feature-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px 24px; text-align: center; transition: all 0.3s ease;">
+          <div class="feature-icon" style="width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00ffff, #00ccff); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 26px;">📡</div>
+          <h3 style="color: white; font-size: 22px; margin-bottom: 10px;">Site Monitoring</h3>
+          <p style="color: #ccc; font-size: 14px;">Sayt monitoringi va doimiy nazorat tizimi.</p>
+          <a href="{{ url_for('monitoring') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 12px; margin-top: 15px; text-decoration: none;">Open</a>
         </div>
-      </div>
+
+        <div class="feature-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px 24px; text-align: center; transition: all 0.3s ease;">
+          <div class="feature-icon" style="width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00ffff, #00ccff); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 26px;">🔐</div>
+          <h3 style="color: white; font-size: 22px; margin-bottom: 10px;">Corporate API Access</h3>
+          <p style="color: #ccc; font-size: 14px;">Corporate foydalanuvchilar uchun kengaytirilgan API access.</p>
+          <a href="{{ url_for('api_docs') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 12px; margin-top: 15px; text-decoration: none;">Open</a>
+        </div>
+
+        <div class="feature-card" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px 24px; text-align: center; transition: all 0.3s ease;">
+          <div class="feature-icon" style="width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(135deg, #00ffff, #00ccff); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 26px;">🏢</div>
+          <h3 style="color: white; font-size: 22px; margin-bottom: 10px;">Team Features</h3>
+          <p style="color: #ccc; font-size: 14px;">Bir nechta foydalanuvchi va jamoa boshqaruvi imkoniyatlari.</p>
+          <a href="#" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 12px; margin-top: 15px; text-decoration: none;">Open</a>
+        </div>
+      {% endif %}
     </div>
 
   {% else %}
-    <div class="empty-state">
-      <div class="lock-icon">🔒</div>
-      <h2>Premium funksiyalar yopiq</h2>
-      <p>Bu bo‘limlardan foydalanish uchun tarifingizni yangilang.</p>
-      <div class="upgrade-options">
-        <a href="{{ url_for('subscribe', plan='pro') }}" class="btn-secondary">Upgrade to Pro</a>
-        <a href="{{ url_for('subscribe', plan='corporate') }}" class="btn-primary">Corporate Plan</a>
+    {# Bu qism foydalanuvchi Premium bo'lmasa ko'rinadi #}
+    <div class="empty-state" style="max-width: 700px; margin: 0 auto; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); backdrop-filter: blur(12px); border-radius: 24px; padding: 40px 28px; text-align: center;">
+      <div class="lock-icon" style="font-size: 3rem; margin-bottom: 15px;">🔒</div>
+      <h2 style="color: white;">Premium funksiyalar yopiq</h2>
+      <p style="color: #cbd5e1;">Bu bo‘limlardan foydalanish uchun tarifingizni yangilang.</p>
+      <div class="upgrade-options" style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+        <a href="{{ url_for('subscribe', plan='pro') }}" class="btn-secondary" style="display: inline-block; background: transparent; border: 2px solid #00ffff; color: #00ffff; font-weight: 700; padding: 12px 24px; border-radius: 14px; text-decoration: none;">Upgrade to Pro</a>
+        <a href="{{ url_for('subscribe', plan='corporate') }}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #00ffff, #00ccff); color: #000; font-weight: 700; padding: 12px 24px; border-radius: 14px; text-decoration: none;">Corporate Plan</a>
       </div>
     </div>
   {% endif %}
 
-  <section class="subscription-details card">
-    <h3>Obuna Ma'lumotlari</h3>
-    <div class="details-grid">
-      <p><strong>Boshlangan:</strong> {{ current_user.subscription_start }}</p>
-      <p><strong>Tugash muddati:</strong> {{ current_user.subscription_end }}</p>
+  <!-- Subscription Details Card with Cyber Effect -->
+  <section class="subscription-details card" style="margin-top: 40px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 24px; padding: 30px; backdrop-filter: blur(12px);">
+    <h3 style="color: #00ffff; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+      <i class="fas fa-calendar-alt"></i> Obuna Ma'lumotlari
+    </h3>
+    <div class="details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+      <p style="color: #ccc;"><strong style="color: #00ffff;">Boshlangan:</strong> 
+        {% if current_user.subscription_start %}{{ current_user.subscription_start.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}
+      </p>
+      <p style="color: #ccc;"><strong style="color: #00ffff;">Tugash muddati:</strong> 
+        {% if current_user.subscription_end %}{{ current_user.subscription_end.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}
+      </p>
     </div>
   </section>
 
+  <!-- API Token Section -->
+  <div class="subscription-box" style="margin-top: 30px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 20px; padding: 20px; text-align: center;">
+    <h3 style="color: #00ffff;">🔑 Desktop Agent API Token</h3>
+    <p style="color: #ccc;">Local scanner ushbu token orqali sizning hisobingizga ulanadi.</p>
+    <div style="background: #0f172a; padding: 12px; border-radius: 8px; word-break: break-all; border: 1px solid rgba(0, 255, 255, 0.3);">
+      <code style="color: #00ffff;">{{ current_user.api_token }}</code>
+    </div>
+    <button onclick="copyToken()" style="margin-top: 15px; background: linear-gradient(135deg, #00ffff, #00ccff); border: none; padding: 10px 20px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">
+      <i class="fas fa-copy"></i> Copy Token
+    </button>
+  </div>
 </div>
+
+<style>
+  /* Animations */
+  @keyframes titlePulse {
+    0% { text-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+    100% { text-shadow: 0 0 25px rgba(0, 255, 255, 0.6); }
+  }
+  
+  /* Stat cards hover effect */
+  .stat-card:hover {
+    transform: translateY(-5px);
+    border-color: #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  }
+  
+  /* Feature cards hover effect */
+  .feature-card:hover {
+    transform: translateY(-8px);
+    border-color: #00ffff;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+  }
+  
+  /* Button hover effect */
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .dashboard-title {
+      font-size: 38px !important;
+    }
+    
+    .features-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>
 
 <script>
 function copyToken() {
   const token = "{{ current_user.api_token }}";
+  if (!token) {
+      alert("Token mavjud emas!");
+      return;
+  }
   navigator.clipboard.writeText(token).then(() => {
-    alert("Token nusxalandi!");
+    alert("✅ Token nusxalandi!");
+  }).catch(err => {
+    console.error('Xatolik:', err);
+    alert("Token nusxalashda xatolik yuz berdi!");
   });
 }
 </script>

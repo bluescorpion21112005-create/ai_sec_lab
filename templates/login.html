@@ -1,30 +1,339 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Security Lab | Advanced Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --accent: #00ff88;
+            --bg: #010204;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* 1. NEYRON TARMOQLARI VA IoT FON CANVAS */
+        #neural-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        /* 2. SKANERLASH CHIZIG'I (AI STYLE) */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, transparent, var(--primary), transparent);
+            opacity: 0.5;
+            z-index: 2;
+            animation: scanning 4s linear infinite;
+            filter: blur(2px);
+        }
+
+        @keyframes scanning {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        /* 3. ASOSIY KONTEYNER */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 420px;
+            padding: 2px; /* Yupqaroq va professionalroq chet */
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            background-size: 200% 200%;
+            animation: gradientMove 5s ease infinite, borderGlow 3s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.4)); }
+            50% { filter: drop-shadow(0 0 25px rgba(112, 0, 255, 0.4)); }
+        }
+
+        /* 4. OYNASIMON KARTA (Glassmorphism) */
+        .glass-card {
+            background: rgba(5, 8, 12, 0.9);
+            backdrop-filter: blur(25px);
+            border-radius: 22px;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            background: linear-gradient(to right, var(--primary), #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3));
+        }
+
+        .status-bar {
+            font-size: 0.65rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 5. FUTURISTIK INPUTLAR */
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.4s;
+            box-sizing: border-box;
+        }
+
+        .input-group label {
+            position: absolute;
+            top: 12px;
+            left: 10px;
+            color: #4a5568;
+            pointer-events: none;
+            transition: 0.4s;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .input-group input:focus ~ label,
+        .input-group input:valid ~ label {
+            top: -18px;
+            left: 0;
+            color: var(--primary);
+            font-size: 0.7rem;
+            text-shadow: 0 0 5px var(--primary);
+        }
+
+        .input-group input:focus {
+            border-bottom: 1px solid var(--primary);
+            background: rgba(0, 242, 255, 0.03);
+        }
+
+        /* 6. KIBER TUGMA */
+        .login-btn {
+            position: relative;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: 0.4s;
+            overflow: hidden;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        .login-btn:hover {
+            background: var(--primary);
+            color: black;
+            box-shadow: 0 0 30px var(--primary);
+            letter-spacing: 6px;
+        }
+
+        /* 7. FOOTER */
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #4a5568;
+            letter-spacing: 1px;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .footer a:hover {
+            text-shadow: 0 0 10px var(--accent);
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
-  <div class="container history-container">
-    <section class="card">
-      <h1 class="title history-title">Login</h1>
-      <form method="post">
-        <div class="form-block">
-          <label>Email</label>
-          <input type="text" name="email" placeholder="you@example.com">
+
+    <canvas id="neural-canvas"></canvas>
+    <div class="scan-line"></div>
+
+    <div class="login-container">
+        <div class="glass-card">
+            <div class="header">
+                <h1>AI.CORE</h1>
+                <div class="status-bar">
+                    <div class="status-dot"></div>
+                    SECURE PROTOCOL ACTIVE
+                </div>
+            </div>
+
+            <form method="post" action="/login">
+                <div class="input-group">
+                    <input type="email" name="email" required autocomplete="off">
+                    <label>Neural Identity</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="password" required autocomplete="off">
+                    <label>Encryption Key</label>
+                </div>
+
+                <button type="submit" class="login-btn">Authenticate</button>
+            </form>
+
+            <div class="footer">
+                IoT DEVICE NODE: <span style="color:var(--primary)">#X-99</span> <br><br>
+                <a href="{{ url_for('auth.register') }}">Initialize New Node</a>
+            </div>
         </div>
-        <div class="form-block">
-          <label>Password</label>
-          <input type="text" name="password" placeholder="Your password">
-        </div>
-        <div class="actions">
-          <button class="btn-primary" type="submit">Login</button>
-          <a class="btn-link btn-muted" href="{{ url_for('auth.register') }}">Register</a>
-        </div>
-      </form>
-    </section>
-  </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const particleCount = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = '#00f2ff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(0, 242, 255, ${1 - distance/150})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            init();
+        });
+    </script>
 </body>
 </html>

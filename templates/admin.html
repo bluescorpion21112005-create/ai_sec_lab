@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="min-height: calc(100vh - 200px); padding: 40px 20px;">
+  <section class="card" style="max-width: 1400px; margin: 0 auto; position: relative; overflow: hidden;">
+    <!-- Neon Glow Background Effect -->
+    <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0, 255, 255, 0.08) 0%, transparent 70%); pointer-events: none; z-index: 0;"></div>
+    
+    <div style="position: relative; z-index: 2;">
+      <!-- Admin Panel Header with Cyber Style -->
+      <div style="text-align: center; margin-bottom: 40px;">
+        <h1 class="title" style="font-size: 2.8rem; background: linear-gradient(135deg, #00ffff, #00ccff, #ff00ff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 30px rgba(0, 255, 255, 0.3); display: inline-flex; align-items: center; gap: 15px;">
+          <i class="fas fa-crown" style="color: #00ffff; text-shadow: 0 0 10px #00ffff;"></i>
+          Admin Panel
+          <i class="fas fa-shield-halved" style="color: #00ffff; text-shadow: 0 0 10px #00ffff;"></i>
+        </h1>
+        <p style="color: #888; margin-top: 10px; border-left: 3px solid #00ffff; padding-left: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
+          <i class="fas fa-lock" style="color: #00ffff;"></i> Tizim boshqaruvi va monitoring
+        </p>
+      </div>
+
+      <!-- Stats Cards Row -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <div class="stat-card-admin" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; backdrop-filter: blur(8px); transition: all 0.3s ease;">
+          <i class="fas fa-users" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px;"></i>
+          <div style="font-size: 2rem; font-weight: bold; color: white;">{{ users|length }}</div>
+          <div style="color: #888; font-size: 0.85rem;">Jami foydalanuvchilar</div>
+        </div>
+        <div class="stat-card-admin" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; backdrop-filter: blur(8px); transition: all 0.3s ease;">
+          <i class="fas fa-credit-card" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px;"></i>
+          <div style="font-size: 2rem; font-weight: bold; color: white;">{{ payments|length }}</div>
+          <div style="color: #888; font-size: 0.85rem;">Jami to'lovlar</div>
+        </div>
+        <div class="stat-card-admin" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; backdrop-filter: blur(8px); transition: all 0.3s ease;">
+          <i class="fas fa-search" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px;"></i>
+          <div style="font-size: 2rem; font-weight: bold; color: white;">{{ scans|length }}</div>
+          <div style="color: #888; font-size: 0.85rem;">Jami skanerlar</div>
+        </div>
+        <div class="stat-card-admin" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 16px; padding: 20px; text-align: center; backdrop-filter: blur(8px); transition: all 0.3s ease;">
+          <i class="fas fa-chart-line" style="font-size: 2rem; color: #00ffff; margin-bottom: 10px;"></i>
+          <div style="font-size: 2rem; font-weight: bold; color: white;">{{ ((users|length * 100) // 10) if users|length > 0 else 0 }}%</div>
+          <div style="color: #888; font-size: 0.85rem;">Tizim faolligi</div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div style="margin-bottom: 40px;">
+        <h2 style="color: #00ffff; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 10px;">
+          <i class="fas fa-users"></i>
+          Foydalanuvchilar
+          <span style="font-size: 0.85rem; background: rgba(0, 255, 255, 0.2); padding: 2px 10px; border-radius: 20px; color: #00ffff;">{{ users|length }} ta</span>
+        </h2>
+        
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; background: rgba(0, 0, 0, 0.3); border-radius: 12px; overflow: hidden;">
+            <thead>
+              <tr style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 100, 255, 0.1)); border-bottom: 2px solid rgba(0, 255, 255, 0.3);">
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Ism</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Email</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Tarif reja</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Status</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Harakat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr style="border-bottom: 1px solid rgba(0, 255, 255, 0.1); transition: all 0.3s ease;" class="user-row">
+                <td style="padding: 12px 15px; color: white;">
+                  <i class="fas fa-user-circle" style="color: #00ffff; margin-right: 8px;"></i>
+                  {{ user.full_name }}
+                </td>
+                <td style="padding: 12px 15px; color: #ccc;">{{ user.email }}</td>
+                <td style="padding: 12px 15px;">
+                  <span class="plan-badge" style="
+                    background: {% if user.subscription_plan == 'pro' %}linear-gradient(135deg, #00ffff, #00ccff){% elif user.subscription_plan == 'corporate' %}linear-gradient(135deg, #ff00ff, #cc00cc){% else %}rgba(100, 100, 100, 0.3){% endif %};
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    color: {% if user.subscription_plan == 'free' %}#ccc{% else %}#000{% endif %};
+                    font-weight: 500;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                  ">
+                    {% if user.subscription_plan == 'free' %}
+                      <i class="fas fa-gem"></i> Bepul
+                    {% elif user.subscription_plan == 'pro' %}
+                      <i class="fas fa-crown"></i> Professional
+                    {% elif user.subscription_plan == 'corporate' %}
+                      <i class="fas fa-building"></i> Korporativ
+                    {% else %}
+                      {{ user.subscription_plan }}
+                    {% endif %}
+                  </span>
+                </td>
+                <td style="padding: 12px 15px;">
+                  <span class="status-badge" style="
+                    background: {% if user.subscription_status == 'active' %}rgba(34, 197, 94, 0.2){% else %}rgba(239, 68, 68, 0.2){% endif %};
+                    border: 1px solid {% if user.subscription_status == 'active' %}#22c55e{% else %}#ef4444{% endif %};
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    color: {% if user.subscription_status == 'active' %}#22c55e{% else %}#ef4444{% endif %};
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                  ">
+                    {% if user.subscription_status == 'active' %}
+                      <i class="fas fa-check-circle"></i> Faol
+                    {% else %}
+                      <i class="fas fa-times-circle"></i> No faol
+                    {% endif %}
+                  </span>
+                </td>
+                <td style="padding: 12px 15px;">
+                  <button class="action-btn" data-user-id="{{ user.id }}" data-user-email="{{ user.email }}" style="background: rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 8px; padding: 6px 12px; color: #00ffff; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fas fa-edit"></i> Tahrirlash
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Payments Table -->
+      <div style="margin-bottom: 40px;">
+        <h2 style="color: #00ffff; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 10px;">
+          <i class="fas fa-credit-card"></i>
+          So'nggi to'lovlar
+          <span style="font-size: 0.85rem; background: rgba(0, 255, 255, 0.2); padding: 2px 10px; border-radius: 20px; color: #00ffff;">{{ payments|length }} ta</span>
+        </h2>
+        
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; background: rgba(0, 0, 0, 0.3); border-radius: 12px; overflow: hidden;">
+            <thead>
+              <tr style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 100, 255, 0.1)); border-bottom: 2px solid rgba(0, 255, 255, 0.3);">
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Reja</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Summa</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Status</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Sana</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in payments %}
+              <tr style="border-bottom: 1px solid rgba(0, 255, 255, 0.1); transition: all 0.3s ease;" class="payment-row">
+                <td style="padding: 12px 15px; color: white;">
+                  {% if tx.plan == 'free' %}
+                    <i class="fas fa-gem" style="color: #888;"></i> Bepul
+                  {% elif tx.plan == 'pro' %}
+                    <i class="fas fa-crown" style="color: #00ffff;"></i> Professional
+                  {% elif tx.plan == 'corporate' %}
+                    <i class="fas fa-building" style="color: #ff00ff;"></i> Korporativ
+                  {% else %}
+                    {{ tx.plan }}
+                  {% endif %}
+                </td>
+                <td style="padding: 12px 15px; color: #00ffff; font-weight: bold;">
+                  {{ "{:,.0f}".format(tx.amount) }} so'm
+                </td>
+                <td style="padding: 12px 15px;">
+                  <span class="payment-status" style="
+                    background: {% if tx.status == 'success' %}rgba(34, 197, 94, 0.2){% elif tx.status == 'pending' %}rgba(245, 158, 11, 0.2){% else %}rgba(239, 68, 68, 0.2){% endif %};
+                    border: 1px solid {% if tx.status == 'success' %}#22c55e{% elif tx.status == 'pending' %}#f59e0b{% else %}#ef4444{% endif %};
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    color: {% if tx.status == 'success' %}#22c55e{% elif tx.status == 'pending' %}#f59e0b{% else %}#ef4444{% endif %};
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                  ">
+                    {% if tx.status == 'success' %}
+                      <i class="fas fa-check-circle"></i> Bajarildi
+                    {% elif tx.status == 'pending' %}
+                      <i class="fas fa-clock"></i> Kutilmoqda
+                    {% else %}
+                      <i class="fas fa-times-circle"></i> Bekor qilindi
+                    {% endif %}
+                  </span>
+                </td>
+                <td style="padding: 12px 15px; color: #888; font-size: 0.85rem;">
+                  <i class="fas fa-calendar-alt" style="color: #00ffff;"></i>
+                  {{ tx.created_at.strftime('%Y-%m-%d %H:%M') if tx.created_at else 'Noma\'lum' }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Scans Table -->
+      <div>
+        <h2 style="color: #00ffff; font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid rgba(0, 255, 255, 0.3); padding-bottom: 10px;">
+          <i class="fas fa-search"></i>
+          So'nggi skanerlar
+          <span style="font-size: 0.85rem; background: rgba(0, 255, 255, 0.2); padding: 2px 10px; border-radius: 20px; color: #00ffff;">{{ scans|length }} ta</span>
+        </h2>
+        
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; background: rgba(0, 0, 0, 0.3); border-radius: 12px; overflow: hidden;">
+            <thead>
+              <tr style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 100, 255, 0.1)); border-bottom: 2px solid rgba(0, 255, 255, 0.3);">
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Target URL</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Sana va vaqt</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Status</th>
+                <th style="padding: 15px; text-align: left; color: #00ffff;">Batafsil</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for scan in scans %}
+              <tr style="border-bottom: 1px solid rgba(0, 255, 255, 0.1); transition: all 0.3s ease;" class="scan-row">
+                <td style="padding: 12px 15px; color: white;">
+                  <i class="fas fa-link" style="color: #00ffff; margin-right: 8px;"></i>
+                  {{ scan.target_url }}
+                </td>
+                <td style="padding: 12px 15px; color: #888; font-size: 0.85rem;">
+                  <i class="fas fa-clock" style="color: #00ffff;"></i>
+                  {{ scan.created_at.strftime('%Y-%m-%d %H:%M') if scan.created_at else 'Noma\'lum' }}
+                </td>
+                <td style="padding: 12px 15px;">
+                  <span class="scan-status-badge" style="background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #22c55e; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-check-circle"></i> Bajarildi
+                  </span>
+                </td>
+                <td style="padding: 12px 15px;">
+                  <button class="view-btn" data-scan-id="{{ scan.id }}" style="background: rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 8px; padding: 6px 12px; color: #00ffff; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fas fa-eye"></i> Ko'rish
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  /* Hover effects for table rows */
+  .user-row:hover,
+  .payment-row:hover,
+  .scan-row:hover {
+    background: rgba(0, 255, 255, 0.05);
+    transform: scale(1.01);
+  }
+  
+  /* Stat cards hover effect */
+  .stat-card-admin:hover {
+    transform: translateY(-5px);
+    border-color: #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  }
+  
+  /* Button hover effects */
+  .action-btn:hover,
+  .view-btn:hover {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  /* Table header gradient animation */
+  @keyframes headerGlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+  
+  thead tr {
+    background-size: 200% 200%;
+    animation: headerGlow 3s ease infinite;
+  }
+  
+  /* Custom scrollbar for tables */
+  ::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #00ffff, #00ccff);
+    border-radius: 3px;
+  }
+  
+  /* Title animation */
+  @keyframes titlePulse {
+    0% { text-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+    100% { text-shadow: 0 0 25px rgba(0, 255, 255, 0.6); }
+  }
+  
+  .title {
+    animation: titlePulse 2s ease-in-out infinite alternate;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .stat-card-admin {
+      margin-bottom: 10px;
+    }
+    
+    table {
+      font-size: 0.85rem;
+    }
+    
+    th, td {
+      padding: 8px 10px !important;
+    }
+    
+    .title {
+      font-size: 1.8rem !important;
+    }
+  }
+  
+  /* Badge animations */
+  .plan-badge, .status-badge, .payment-status, .scan-status-badge {
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+  
+  .plan-badge:hover, .status-badge:hover {
+    transform: scale(1.05);
+  }
+</style>
+
+<script>
+  // Add console log for admin panel (cyber feel)
+  console.log('%c🔐 Admin Panel - AI Security Lab', 'color: #00ffff; font-size: 16px; font-weight: bold;');
+  console.log('%c⚠️ Bu sahifa faqat administratorlar uchun!', 'color: #ff00ff; font-size: 12px;');
+  
+  // Button click handlers
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const userId = btn.getAttribute('data-user-id');
+      const userEmail = btn.getAttribute('data-user-email');
+      alert(`⚡ Admin funksiyasi ishlab chiqilmoqda\n\nFoydalanuvchi: ${userEmail || userId}`);
+    });
+  });
+  
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const scanId = btn.getAttribute('data-scan-id');
+      alert(`🔍 Scan tafsilotlari ishlab chiqilmoqda\n\nScan ID: ${scanId}`);
+    });
+  });
+</script>
+{% endblock %}

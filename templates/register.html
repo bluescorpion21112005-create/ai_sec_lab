@@ -1,34 +1,260 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Security Lab | Register Unit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --accent: #00ff88;
+            --bg: #020406;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* 1. MATRIX RAIN EFFECT CANVAS */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            opacity: 0.15;
+        }
+
+        /* 2. ASOSIY KONTEYNER */
+        .register-container {
+            position: relative;
+            z-index: 10;
+            width: 440px;
+            padding: 3px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { filter: drop-shadow(0 0 12px var(--secondary)); }
+            50% { filter: drop-shadow(0 0 20px var(--primary)); }
+        }
+
+        /* 3. GLASSMORPHISM CARD */
+        .glass-card {
+            background: rgba(10, 15, 20, 0.95);
+            backdrop-filter: blur(25px);
+            border-radius: 21px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(to right, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.4));
+        }
+
+        .status-bar {
+            font-size: 0.65rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 8px;
+            display: block;
+        }
+
+        /* 4. FUTURISTIK INPUTLAR */
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 0;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #1a222c;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.4s;
+        }
+
+        .input-group label {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            color: #4a5568;
+            pointer-events: none;
+            transition: 0.4s;
+            text-transform: uppercase;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .input-group input:focus ~ label,
+        .input-group input:valid ~ label {
+            top: -18px;
+            color: var(--accent);
+            font-size: 0.75rem;
+            text-shadow: 0 0 5px var(--accent);
+        }
+
+        .input-group input:focus {
+            border-bottom: 2px solid var(--accent);
+        }
+
+        /* 5. CYBER BUTTON */
+        .register-btn {
+            position: relative;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.4s;
+            overflow: hidden;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+
+        .register-btn:hover {
+            background: var(--accent);
+            color: black;
+            box-shadow: 0 0 30px var(--accent);
+        }
+
+        /* 6. FOOTER */
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .footer a:hover {
+            text-shadow: 0 0 10px var(--primary);
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <div class="container history-container">
-    <section class="card">
-      <h1 class="title history-title">Register</h1>
-      <form method="post">
-        <div class="form-block">
-          <label>Full name</label>
-          <input type="text" name="full_name" placeholder="Your full name">
+
+    <canvas id="matrix"></canvas>
+
+    <div class="register-container">
+        <div class="glass-card">
+            <div class="header">
+                <h1>REGISTER</h1>
+                <span class="status-bar">INITIALIZING NEW IDENTITY...</span>
+            </div>
+
+            <form method="post" action="/register">
+                <div class="input-group">
+                    <input type="text" name="full_name" required autocomplete="off">
+                    <label>Full Name</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" name="email" required autocomplete="off">
+                    <label>Operational Email</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="password" required autocomplete="off">
+                    <label>Create Access Key</label>
+                </div>
+
+                <button type="submit" class="register-btn">Create Account</button>
+            </form>
+
+            <div class="footer">
+                Already have an identity? <br>
+                <a href="{{ url_for('auth.login') }}">Return to Login</a>
+            </div>
         </div>
-        <div class="form-block">
-          <label>Email</label>
-          <input type="text" name="email" placeholder="you@example.com">
-        </div>
-        <div class="form-block">
-          <label>Password</label>
-          <input type="password" name="password" placeholder="Create password">
-        </div>
-        <div class="actions">
-          <button class="btn-primary" type="submit">Create account</button>
-          <a class="btn-link btn-muted" href="{{ url_for('auth.login') }}">Login</a>
-        </div>
-      </form>
-    </section>
-  </div>
+    </div>
+
+    <script>
+        // MATRIX EFFECT SCRIPT (Shared with Login)
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@&*%";
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for (let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(2, 4, 6, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Register uchun biroz yashilroq neon rang ishlatamiz
+            ctx.fillStyle = "#00ff88"; 
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
 </body>
 </html>
