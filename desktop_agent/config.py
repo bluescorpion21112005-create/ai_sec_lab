@@ -1,2 +1,3 @@
-SERVER_URL = "https://ai-sec-lab.onrender.com"
-DEFAULT_TIMEOUT = 10
+# config.py
+SERVER_URL = "http://localhost:5000"      # O‘z server manzilingizga o‘zgartiring
+DEFAULT_TIMEOUT = 30

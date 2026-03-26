@@ -1,0 +1,446 @@
+/* ============================================
+   CYBER FILE UPLOAD - FUTURISTIC STYLES
+   ============================================ */
+
+/* Custom File Upload Container */
+.cyber-file-upload {
+    position: relative;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+/* Hide default file input */
+.cyber-file-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Custom file upload label */
+.cyber-file-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+}
+
+.cyber-file-label::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.cyber-file-label:hover::before {
+    left: 100%;
+}
+
+.cyber-file-label:hover {
+    border-color: #00ffff;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.cyber-file-label.active {
+    border-color: #00ffff;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+    animation: borderGlow 1s ease-in-out infinite alternate;
+}
+
+.cyber-file-label.scanning::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00ffff, #00ccff, transparent);
+    animation: scanLine 2s linear infinite;
+}
+
+@keyframes scanLine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes borderGlow {
+    from { box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); }
+    to { box-shadow: 0 0 30px rgba(0, 255, 255, 0.6); }
+}
+
+/* File info section */
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+    flex: 1;
+}
+
+.file-info i {
+    font-size: 1.5rem;
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+.file-details {
+    flex: 1;
+}
+
+.file-name {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.file-name span {
+    color: #00ffff;
+    font-weight: bold;
+}
+
+.file-size {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+/* Cyber file button */
+.cyber-file-button {
+    background: linear-gradient(135deg, #00ffff, #00ccff);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.cyber-file-button i {
+    font-size: 1rem;
+}
+
+.cyber-file-button:hover {
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+/* Drag and Drop Zone */
+.cyber-dropzone {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px dashed rgba(0, 255, 255, 0.4);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.cyber-dropzone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.cyber-dropzone:hover::before {
+    left: 100%;
+}
+
+.cyber-dropzone.drag-over {
+    border-color: #00ffff;
+    background: rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    transform: scale(1.02);
+}
+
+.cyber-dropzone i {
+    font-size: 3rem;
+    color: #00ffff;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+.cyber-dropzone p {
+    color: #ccc;
+    margin: 0.5rem 0;
+}
+
+.cyber-dropzone .small-text {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* File List Preview */
+.file-list {
+    margin-top: 1rem;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.file-item {
+    background: rgba(0, 0, 0, 0.4);
+    border-left: 3px solid #00ffff;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.file-item:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.file-item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.file-item-info i {
+    font-size: 1.2rem;
+    color: #00ffff;
+}
+
+.file-item-details {
+    flex: 1;
+}
+
+.file-item-name {
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.file-item-size {
+    color: #888;
+    font-size: 0.7rem;
+}
+
+.file-item-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-status-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(0, 255, 255, 0.2);
+    color: #00ffff;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.remove-file {
+    background: rgba(255, 0, 0, 0.2);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff6666;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.remove-file:hover {
+    background: rgba(255, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+/* Upload Progress */
+.upload-progress {
+    margin-top: 1rem;
+    display: none;
+}
+
+.upload-progress.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.progress-text {
+    color: #00ffff;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.progress-bar-upload {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    height: 6px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #00ffff, #00ccff);
+    width: 0%;
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 1s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* File counter badge */
+.file-counter {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, #ff00ff, #00ffff);
+    color: #000;
+    font-weight: bold;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 20px;
+    animation: pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Notification styles */
+.cyber-notification {
+    font-family: inherit;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.cyber-notification i {
+    font-size: 1.1rem;
+}
+
+/* Scrollbar for file list */
+.file-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00ffff, #00ccff);
+    border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .file-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .file-name {
+        max-width: 150px;
+    }
+    
+    .cyber-file-label {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .cyber-file-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .cyber-dropzone {
+        padding: 1rem;
+    }
+    
+    .cyber-dropzone i {
+        font-size: 2rem;
+    }
+    
+    .file-item {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .file-item-status {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .file-item-name {
+        font-size: 0.75rem;
+    }
+    
+    .file-status-badge {
+        font-size: 0.65rem;
+    }
+}

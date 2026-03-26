@@ -1,23 +1,29 @@
+# api_client.py
 import requests
-
+import json
+from datetime import datetime
+from config import SERVER_URL, DEFAULT_TIMEOUT
 
 def submit_scan_results(server_url, api_token, target_url, findings):
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "Content-Type": "application/json"
-    }
-
+    if not server_url.endswith('/'):
+        server_url += '/'
+    endpoint = server_url + 'api/scan_results'
     payload = {
+        "api_token": api_token,
         "target_url": target_url,
-        "scan_type": "desktop_local_agent",
-        "findings": findings
+        "findings": findings,
+        "timestamp": str(datetime.now())
     }
-
-    response = requests.post(
-        f"{server_url.rstrip('/')}/api/submit-local-scan",
-        json=payload,
-        headers=headers,
-        timeout=15
-    )
-
-    return response
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_token}"
+    }
+    try:
+        response = requests.post(endpoint, json=payload, headers=headers, timeout=DEFAULT_TIMEOUT)
+        return response
+    except requests.exceptions.RequestException as e:
+        class MockResponse:
+            def __init__(self, status_code, text):
+                self.status_code = status_code
+                self.text = text
+        return MockResponse(500, f"Connection error: {e}")

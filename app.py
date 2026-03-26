@@ -343,9 +343,11 @@ def admin_panel():
     payments = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(20).all()
     scans = LocalScanResult.query.order_by(LocalScanResult.created_at.desc()).limit(20).all()
 
+    print("TOTAL USERS:", User.query.count())
+    print("ALL USERS:", [(u.id, u.full_name, u.email) for u in User.query.all()])
+    print("DB URI:", app.config.get("SQLALCHEMY_DATABASE_URI"))
+
     return render_template("admin.html", users=users, payments=payments, scans=scans)
-
-
 @app.route("/site-monitoring")
 @login_required
 def site_monitoring():

@@ -2,3 +2,7 @@ requests
 customtkinter
 reportlab
 beautifulsoup4
+psutil
+paramiko
+docker
+matplotlib

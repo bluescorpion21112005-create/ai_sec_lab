@@ -469,10 +469,160 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        closeLoginModal();
-        closeRegisterModal();
-        closeScanModal();
+// CUSTOM CYBER FILE UPLOAD - NEW WORKING VERSION
+document.addEventListener("DOMContentLoaded", function () {
+    const filesInput = document.getElementById("files");
+    const openFileBtn = document.getElementById("openFileBtn");
+    const fileCount = document.getElementById("fileCount");
+    const totalSize = document.getElementById("totalSize");
+    const fileListContainer = document.getElementById("fileListContainer");
+    const uploadProgress = document.getElementById("uploadProgress");
+    const uploadFill = document.getElementById("uploadFill");
+    const progressPercent = document.getElementById("progressPercent");
+
+    if (!filesInput || !openFileBtn || !fileCount || !totalSize || !fileListContainer) {
+        return;
     }
+
+    let selectedFiles = [];
+    const maxSize = 10 * 1024 * 1024;
+    const allowedExtensions = ["html", "htm", "txt"];
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    }
+
+    function showUploadNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas ${type === "success" ? "fa-check-circle" : type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}"></i>
+            <span>${escapeHtml(message)}</span>
+        `;
+
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: ${type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#3b82f6"};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 9999;
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 2500);
+    }
+
+    function updateHiddenInput() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        filesInput.files = dt.files;
+    }
+
+    function renderFiles() {
+        if (selectedFiles.length === 0) {
+            fileCount.textContent = "Hech qanday fayl tanlanmagan";
+            totalSize.textContent = "";
+            fileListContainer.innerHTML = "";
+            uploadProgress.style.display = "none";
+            uploadFill.style.width = "0%";
+            progressPercent.textContent = "0%";
+            return;
+        }
+
+        const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+
+        fileCount.textContent = selectedFiles.length === 1
+            ? selectedFiles[0].name
+            : `${selectedFiles.length} ta fayl tanlandi`;
+
+        totalSize.textContent = `Umumiy hajm: ${formatBytes(totalBytes)}`;
+
+        fileListContainer.innerHTML = selectedFiles.map((file, index) => `
+            <div class="file-item">
+                <div class="file-item-left">
+                    <i class="fas fa-file-code"></i>
+                    <div class="file-item-name">${escapeHtml(file.name)} (${formatBytes(file.size)})</div>
+                </div>
+                <button type="button" class="remove-file-btn" data-index="${index}">
+                    O'chirish
+                </button>
+            </div>
+        `).join("");
+
+        uploadProgress.style.display = "block";
+        uploadFill.style.width = "100%";
+        progressPercent.textContent = "100%";
+
+        document.querySelectorAll(".remove-file-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const index = Number(this.getAttribute("data-index"));
+                selectedFiles.splice(index, 1);
+                updateHiddenInput();
+                renderFiles();
+            });
+        });
+    }
+
+    openFileBtn.addEventListener("click", function () {
+        filesInput.click();
+    });
+
+    filesInput.addEventListener("change", function () {
+        const incomingFiles = Array.from(this.files || []);
+        const validFiles = [];
+
+        incomingFiles.forEach(file => {
+            const ext = file.name.split(".").pop().toLowerCase();
+
+            if (!allowedExtensions.includes(ext)) {
+                showUploadNotification(`${file.name} - faqat HTML yoki TXT`, "error");
+                return;
+            }
+
+            if (file.size > maxSize) {
+                showUploadNotification(`${file.name} - 10MB dan katta`, "error");
+                return;
+            }
+
+            const alreadyExists = selectedFiles.some(existing => 
+                existing.name === file.name &&
+                existing.size === file.size &&
+                existing.lastModified === file.lastModified
+            );
+
+            if (!alreadyExists) {
+                validFiles.push(file);
+            }
+        });
+
+        if (validFiles.length > 0) {
+            selectedFiles = [...selectedFiles, ...validFiles];
+            updateHiddenInput();
+            renderFiles();
+            showUploadNotification(`${validFiles.length} ta fayl qo'shildi`, "success");
+        } else {
+            updateHiddenInput();
+            renderFiles();
+        }
+    });
 });
