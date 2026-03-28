@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Project</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container history-container">
+    <section class="card">
+      <h1 class="title history-title">Add Website</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-block">
+          <label>Project name</label>
+          <input type="text" name="name" placeholder="My Company Website" required>
+        </div>
+
+        <div class="form-block">
+          <label>Domain</label>
+          <input type="text" name="domain" placeholder="example.com" required>
+        </div>
+
+        <div class="form-block">
+          <label>Description</label>
+          <textarea name="description" placeholder="Optional description"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" type="submit">Add project</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,339 +1,484 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Security Lab | Advanced Access</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cybrix AI | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #00f2ff;
-            --secondary: #7000ff;
-            --accent: #00ff88;
-            --bg: #010204;
-        }
-
-        body, html {
+        * {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg);
-            font-family: 'Rajdhani', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            color: white;
-        }
-
-        /* 1. NEYRON TARMOQLARI VA IoT FON CANVAS */
-        #neural-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            opacity: 0.4;
-        }
-
-        /* 2. SKANERLASH CHIZIG'I (AI STYLE) */
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(to right, transparent, var(--primary), transparent);
-            opacity: 0.5;
-            z-index: 2;
-            animation: scanning 4s linear infinite;
-            filter: blur(2px);
-        }
-
-        @keyframes scanning {
-            0% { top: -10%; }
-            100% { top: 110%; }
-        }
-
-        /* 3. ASOSIY KONTEYNER */
-        .login-container {
-            position: relative;
-            z-index: 10;
-            width: 420px;
-            padding: 2px; /* Yupqaroq va professionalroq chet */
-            border-radius: 24px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
-            background-size: 200% 200%;
-            animation: gradientMove 5s ease infinite, borderGlow 3s linear infinite;
-        }
-
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes borderGlow {
-            0%, 100% { filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.4)); }
-            50% { filter: drop-shadow(0 0 25px rgba(112, 0, 255, 0.4)); }
-        }
-
-        /* 4. OYNASIMON KARTA (Glassmorphism) */
-        .glass-card {
-            background: rgba(5, 8, 12, 0.9);
-            backdrop-filter: blur(25px);
-            border-radius: 22px;
-            padding: 50px 40px;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            background: linear-gradient(to right, var(--primary), #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3));
-        }
-
-        .status-bar {
-            font-size: 0.65rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-top: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* 5. FUTURISTIK INPUTLAR */
-        .input-group {
-            position: relative;
-            margin-bottom: 30px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px 10px;
-            background: rgba(255, 255, 255, 0.02);
-            border: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-            transition: 0.4s;
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-cyan: #00f2ff;
+            --primary-green: #00ff88;
+            --primary-purple: #b400ff;
+            --bg-deep: #010101;
+            --card-bg: rgba(8, 12, 18, 0.92);
+            --glass-border: rgba(0, 242, 255, 0.25);
+            --glow-cyan: rgba(0, 242, 255, 0.6);
+            --glow-green: rgba(0, 255, 136, 0.5);
+            --text-dim: #a0b3d9;
+        }
+
+        body {
+            background: var(--bg-deep);
+            font-family: 'Rajdhani', sans-serif;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            padding: 1.5rem;
+        }
+
+        #network-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .cyber-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 2rem;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-cyan));
+            padding: 2.5px;
+            animation: borderPulse 3s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.3);
+        }
+
+        @keyframes borderPulse {
+            0% { box-shadow: 0 0 0px 0px rgba(0, 242, 255, 0.2); }
+            50% { box-shadow: 0 0 20px 5px rgba(0, 242, 255, 0.5); }
+            100% { box-shadow: 0 0 0px 0px rgba(0, 242, 255, 0.2); }
+        }
+
+        .glass-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 1.8rem;
+            padding: 2.2rem 2rem;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .brand-badge {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .brand-badge span {
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 3px;
+            font-size: 0.75rem;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            text-align: center;
+            background: linear-gradient(to right, var(--primary-cyan), #aaffdd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 12px rgba(0, 242, 255, 0.4);
+        }
+        .status-line {
+            text-align: center;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary-green);
+            border-right: 2px solid var(--primary-green);
+            display: inline-block;
+            width: auto;
+            margin: 0 auto 1.5rem;
+            padding-right: 0.6rem;
+            animation: blinkCursor 1s step-end infinite;
+        }
+        @keyframes blinkCursor {
+            0%, 100% { border-color: var(--primary-green); opacity: 1; }
+            50% { border-color: transparent; }
+        }
+
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
+        .flash {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(8px);
+            border-left: 4px solid;
+        }
+        .flash-success { background: rgba(0, 255, 136, 0.12); border-left-color: #00ff88; color: #ccffdd; }
+        .flash-danger { background: rgba(255, 50, 80, 0.12); border-left-color: #ff4d6d; color: #ffc2cf; }
+        .flash-warning { background: rgba(255, 200, 50, 0.12); border-left-color: #ffd966; color: #fff0c0; }
+        .flash-info { background: rgba(0, 200, 255, 0.12); border-left-color: #00ccff; color: #b8f2ff; }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .input-group input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #2a3a44;
+            padding: 12px 0 6px 0;
+            font-size: 1rem;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+            font-family: 'Rajdhani', monospace;
+            font-weight: 500;
+        }
         .input-group label {
             position: absolute;
-            top: 12px;
-            left: 10px;
-            color: #4a5568;
-            pointer-events: none;
-            transition: 0.4s;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-
-        .input-group input:focus ~ label,
-        .input-group input:valid ~ label {
-            top: -18px;
             left: 0;
-            color: var(--primary);
-            font-size: 0.7rem;
-            text-shadow: 0 0 5px var(--primary);
-        }
-
-        .input-group input:focus {
-            border-bottom: 1px solid var(--primary);
-            background: rgba(0, 242, 255, 0.03);
-        }
-
-        /* 6. KIBER TUGMA */
-        .login-btn {
-            position: relative;
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 15px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            cursor: pointer;
-            transition: 0.4s;
-            overflow: hidden;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-
-        .login-btn:hover {
-            background: var(--primary);
-            color: black;
-            box-shadow: 0 0 30px var(--primary);
-            letter-spacing: 6px;
-        }
-
-        /* 7. FOOTER */
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #4a5568;
+            bottom: 6px;
+            color: #7f8fa4;
+            font-size: 0.85rem;
+            font-weight: 500;
             letter-spacing: 1px;
+            pointer-events: none;
+            transition: 0.25s ease;
+            text-transform: uppercase;
+        }
+        .input-group input:focus,
+        .input-group input:not(:placeholder-shown) {
+            border-bottom-color: var(--primary-cyan);
+            box-shadow: 0 4px 12px -6px var(--primary-cyan);
+        }
+        .input-group input:focus ~ label,
+        .input-group input:not(:placeholder-shown) ~ label {
+            transform: translateY(-22px);
+            font-size: 0.7rem;
+            color: var(--primary-green);
+            text-shadow: 0 0 4px var(--primary-green);
         }
 
-        .footer a {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: bold;
+        .cyber-btn {
+            width: 100%;
+            background: transparent;
+            border: 1.5px solid var(--primary-green);
+            color: var(--primary-green);
+            padding: 12px 0;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 40px;
+            cursor: pointer;
             transition: 0.3s;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .cyber-btn:hover {
+            background: var(--primary-green);
+            color: black;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            border-color: var(--primary-green);
+            transform: translateY(-2px);
+        }
+        .google-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 242, 255, 0.06);
+            border: 1px solid rgba(0, 242, 255, 0.5);
+            border-radius: 40px;
+            padding: 11px 0;
+            text-decoration: none;
+            color: var(--primary-cyan);
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            transition: all 0.25s;
+            backdrop-filter: blur(4px);
+        }
+        .google-btn:hover {
+            background: rgba(0, 242, 255, 0.2);
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0 1rem;
+            color: #4b5e77;
+            font-size: 0.75rem;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+        .divider span {
+            margin: 0 10px;
+            font-weight: 500;
+            letter-spacing: 2px;
         }
 
-        .footer a:hover {
-            text-shadow: 0 0 10px var(--accent);
-            color: #fff;
+        .footer-links {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.85rem;
+            color: #9aaec9;
+        }
+        .footer-links a {
+            color: var(--primary-cyan);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .footer-links a:hover {
+            text-shadow: 0 0 6px var(--primary-cyan);
+            text-decoration: underline;
+        }
+        .helper-text {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 1rem;
+            color: #5f7393;
+        }
+        @media (max-width: 560px) {
+            .glass-panel { padding: 1.5rem; }
+            h1 { font-size: 1.8rem; }
+            .cyber-container { margin: 0 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <canvas id="neural-canvas"></canvas>
-    <div class="scan-line"></div>
+    <canvas id="network-canvas"></canvas>
 
-    <div class="login-container">
-        <div class="glass-card">
-            <div class="header">
-                <h1>AI.CORE</h1>
-                <div class="status-bar">
-                    <div class="status-dot"></div>
-                    SECURE PROTOCOL ACTIVE
-                </div>
+    <div class="cyber-container">
+        <div class="glass-panel">
+            <div class="brand-badge">
+                <span>✦ CYBRIX AI SECURE NEXUS ✦</span>
+            </div>
+            <h1>ACCESS TERMINAL</h1>
+            <div style="text-align: center;">
+                <div class="status-line">[ LOGIN PROTOCOL ]</div>
             </div>
 
-            <form method="post" action="/login">
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <form method="post" action="{{ url_for('login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
                 <div class="input-group">
-                    <input type="email" name="email" required autocomplete="off">
-                    <label>Neural Identity</label>
+                    <input type="email" name="email" id="email" placeholder=" " required autocomplete="email">
+                    <label for="email">ENCRYPTED EMAIL</label>
                 </div>
 
                 <div class="input-group">
-                    <input type="password" name="password" required autocomplete="off">
-                    <label>Encryption Key</label>
+                    <input type="password" name="password" id="password" placeholder=" " required autocomplete="current-password">
+                    <label for="password">ACCESS KEY</label>
                 </div>
 
-                <button type="submit" class="login-btn">Authenticate</button>
+                <button type="submit" class="cyber-btn">⟁ VERIFY CREDENTIALS ⟁</button>
             </form>
 
-            <div class="footer">
-                IoT DEVICE NODE: <span style="color:var(--primary)">#X-99</span> <br><br>
-                <a href="{{ url_for('auth.register') }}">Initialize New Node</a>
+            <div class="divider">
+                <span>ALTERNATIVE AUTH</span>
+            </div>
+
+            <a href="{{ url_for('login_google') }}" class="google-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#00f2ff"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#00ff88"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#b400ff"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#00f2ff"/>
+                </svg>
+                AUTHENTICATE WITH GOOGLE
+            </a>
+
+            <div class="helper-text">
+                ⚡ Neural encryption active • End-to-end secure channel
+            </div>
+
+            <div class="footer-links">
+                <span>⛓️ NO ACCESS NODE? </span><a href="{{ url_for('register') }}">⟁ INITIALIZE ACCOUNT ⟁</a>
             </div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('neural-canvas');
-        const ctx = canvas.getContext('2d');
+        (function() {
+            const canvas = document.getElementById('network-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let nodes = [];
+            let particles = [];
+            const nodeCount = 70;
+            const connectionDistance = 150;
+            const particleSpeed = 0.008;
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let particles = [];
-        const particleCount = 100;
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
+            class Node {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.radius = 2 + Math.random() * 2;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                    this.x = Math.min(Math.max(this.x, 0), width);
+                    this.y = Math.min(Math.max(this.y, 0), height);
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0, 242, 255, ${0.5 + Math.sin(Date.now() * 0.002 + this.x) * 0.2})`;
+                    ctx.fill();
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#00f2ff';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
             }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
 
-                if (this.x > canvas.width) this.x = 0;
-                if (this.x < 0) this.x = canvas.width;
-                if (this.y > canvas.height) this.y = 0;
-                if (this.y < 0) this.y = canvas.height;
+            class Particle {
+                constructor(fromNode, toNode, progress = 0) {
+                    this.from = fromNode;
+                    this.to = toNode;
+                    this.progress = progress;
+                    this.speed = 0.005 + Math.random() * 0.01;
+                }
+                update() {
+                    this.progress += this.speed;
+                    if (this.progress >= 1) {
+                        this.progress = 0;
+                        // optional: pick a new random edge or just continue
+                    }
+                }
+                draw() {
+                    const x = this.from.x + (this.to.x - this.from.x) * this.progress;
+                    const y = this.from.y + (this.to.y - this.from.y) * this.progress;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00ff88';
+                    ctx.fill();
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = '#00ff88';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
             }
-            draw() {
-                ctx.fillStyle = '#00f2ff';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
-                ctx.fill();
+
+            function initNetwork() {
+                nodes = [];
+                for (let i = 0; i < nodeCount; i++) {
+                    nodes.push(new Node(Math.random() * width, Math.random() * height));
+                }
+                // create particles on random edges
+                particles = [];
+                for (let i = 0; i < 40; i++) {
+                    const a = Math.floor(Math.random() * nodes.length);
+                    let b = Math.floor(Math.random() * nodes.length);
+                    while (b === a) b = Math.floor(Math.random() * nodes.length);
+                    particles.push(new Particle(nodes[a], nodes[b], Math.random()));
+                }
             }
-        }
 
-        function init() {
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < 150) {
-                        ctx.strokeStyle = `rgba(0, 242, 255, ${1 - distance/150})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
+            function drawConnections() {
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const dx = nodes[i].x - nodes[j].x;
+                        const dy = nodes[i].y - nodes[j].y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < connectionDistance) {
+                            const opacity = (1 - dist / connectionDistance) * 0.4;
+                            ctx.beginPath();
+                            ctx.moveTo(nodes[i].x, nodes[i].y);
+                            ctx.lineTo(nodes[j].x, nodes[j].y);
+                            ctx.strokeStyle = `rgba(0, 242, 255, ${opacity})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
                     }
                 }
             }
-            requestAnimationFrame(animate);
-        }
 
-        init();
-        animate();
+            function animate() {
+                if (!ctx) return;
+                ctx.clearRect(0, 0, width, height);
+                // fade trail effect
+                ctx.fillStyle = 'rgba(1, 1, 3, 0.08)';
+                ctx.fillRect(0, 0, width, height);
+                
+                // update and draw nodes
+                for (let node of nodes) {
+                    node.update();
+                    node.draw();
+                }
+                drawConnections();
+                
+                // update and draw particles
+                for (let p of particles) {
+                    p.update();
+                    p.draw();
+                }
+                
+                requestAnimationFrame(animate);
+            }
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            particles = [];
-            init();
-        });
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                initNetwork();
+            }
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+            });
+            resizeCanvas();
+            animate();
+        })();
     </script>
 </body>
 </html>

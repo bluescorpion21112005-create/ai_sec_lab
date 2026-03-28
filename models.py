@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 import secrets
+import json
 
 db = SQLAlchemy()
 
@@ -13,7 +14,19 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     full_name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(190), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+
+    # local auth
+    password_hash = db.Column(db.String(255), nullable=True)
+
+    # social auth
+    google_id = db.Column(db.String(255), unique=True, nullable=True)
+    auth_provider = db.Column(db.String(50), default="local")  # local / google / mixed
+
+    # telegram connect
+    telegram_chat_id = db.Column(db.String(100), nullable=True)
+    telegram_username = db.Column(db.String(120), nullable=True)
+    telegram_connected_at = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     subscription_plan = db.Column(db.String(50), default="free")
@@ -29,7 +42,6 @@ class User(UserMixin, db.Model):
     )
     
     def has_active_subscription(self):
-        """Check if user has an active subscription"""
         return (
             self.subscription_status == "active"
             and self.subscription_end is not None
@@ -37,13 +49,20 @@ class User(UserMixin, db.Model):
         )
     
     def get_subscription_plan(self):
-        """Get current subscription plan"""
         return self.subscription_plan
     
     def is_subscription_active(self):
-        """Check if subscription is active"""
         return self.has_active_subscription()
-    
+
+    def has_password(self):
+        return bool(self.password_hash)
+
+    def has_google_login(self):
+        return bool(self.google_id)
+
+    def is_telegram_connected(self):
+        return bool(self.telegram_chat_id)
+
     def __repr__(self):
         return f"<User {self.email}>"
 
@@ -53,18 +72,37 @@ class Project(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
-    domain = db.Column(db.String(255), nullable=True)
+    domain = db.Column(db.String(255), nullable=True, index=True)
     description = db.Column(db.Text, nullable=True)
+
     is_verified = db.Column(db.Boolean, default=False)
-    verification_token = db.Column(db.String(255), nullable=True)
+    verification_token = db.Column(db.String(255), nullable=True, unique=True)
+    verification_method = db.Column(db.String(50), nullable=True)  # meta / html / dns
+    verified_at = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
-    # Relationships
     user = db.relationship("User", backref=db.backref("projects", lazy=True, cascade="all, delete-orphan"))
     scans = db.relationship("ScanRecord", backref="project", lazy=True, cascade="all, delete-orphan")
+
+    def ensure_token(self):
+        if not self.verification_token:
+            self.verification_token = secrets.token_urlsafe(24)
+
+    def verification_meta_tag(self):
+        self.ensure_token()
+        return f'<meta name="cybrix-verification" content="{self.verification_token}">'
+
+    def verification_html_filename(self):
+        self.ensure_token()
+        return f"cybrix-{self.verification_token}.html"
+
+    def verification_html_content(self):
+        self.ensure_token()
+        return f"cybrix-site-verification: {self.verification_token}"
 
     def __repr__(self):
         return f"<Project {self.name}>"
@@ -78,16 +116,15 @@ class ScanRecord(db.Model):
     source = db.Column(db.String(100), nullable=True)
     label = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(100), nullable=True)
-    length = db.Column(db.Integer, nullable=True)  # Changed to Integer
+    length = db.Column(db.Integer, nullable=True)
     scan_type = db.Column(db.String(50), nullable=True)
     result = db.Column(db.Text, nullable=True)
-    risk_score = db.Column(db.Float, default=0)  # Changed to Float
+    risk_score = db.Column(db.Float, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="SET NULL"), nullable=True)
 
-    # Relationships
     user = db.relationship("User", backref=db.backref("scan_records", lazy=True, cascade="all, delete-orphan"))
 
     def __repr__(self):
@@ -105,15 +142,12 @@ class Subscription(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     auto_renew = db.Column(db.Boolean, default=False)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("subscription", uselist=False, cascade="all, delete-orphan"))
 
     def is_valid(self):
-        """Check if subscription is valid"""
         return self.is_active and self.end_date > datetime.utcnow()
     
     def days_remaining(self):
-        """Get remaining days of subscription"""
         if not self.is_valid():
             return 0
         delta = self.end_date - datetime.utcnow()
@@ -134,15 +168,12 @@ class LocalScanResult(db.Model):
     status = db.Column(db.String(50), default="completed")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("local_scans", lazy=True, cascade="all, delete-orphan"))
     
     def get_findings(self):
-        """Get findings as Python list"""
-        import json
         try:
             return json.loads(self.findings_json)
-        except:
+        except Exception:
             return []
     
     def __repr__(self):
@@ -158,7 +189,6 @@ class ApiUsage(db.Model):
     ip_address = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("api_usages", lazy=True))
     
     def __repr__(self):
@@ -174,10 +204,9 @@ class SiteMonitor(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     last_checked_at = db.Column(db.DateTime, nullable=True)
     last_status = db.Column(db.String(50), nullable=True)
-    check_interval = db.Column(db.Integer, default=3600)  # seconds
+    check_interval = db.Column(db.Integer, default=3600)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("site_monitors", lazy=True, cascade="all, delete-orphan"))
     
     def __repr__(self):
@@ -192,13 +221,12 @@ class ScanQueue(db.Model):
     target_url = db.Column(db.String(500), nullable=False)
     scan_type = db.Column(db.String(50), default="full")
     status = db.Column(db.String(50), default="queued")
-    priority = db.Column(db.Integer, default=0)  # Higher = more important
+    priority = db.Column(db.Integer, default=0)
     error_message = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     started_at = db.Column(db.DateTime, nullable=True)
     finished_at = db.Column(db.DateTime, nullable=True)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("scan_queue", lazy=True))
     
     def __repr__(self):
@@ -214,7 +242,6 @@ class Team(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     owner = db.relationship("User", foreign_keys=[owner_id], backref=db.backref("owned_teams", lazy=True))
     members = db.relationship("TeamMember", backref="team", lazy=True, cascade="all, delete-orphan")
     
@@ -231,7 +258,6 @@ class TeamMember(db.Model):
     role = db.Column(db.String(50), default="member")
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("team_memberships", lazy=True, cascade="all, delete-orphan"))
     
     def __repr__(self):
@@ -252,15 +278,12 @@ class PaymentTransaction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     paid_at = db.Column(db.DateTime, nullable=True)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("payments", lazy=True, cascade="all, delete-orphan"))
     
     def is_successful(self):
-        """Check if payment was successful"""
         return self.status == "success"
     
     def mark_as_successful(self):
-        """Mark payment as successful"""
         self.status = "success"
         self.paid_at = datetime.utcnow()
     
@@ -268,7 +291,6 @@ class PaymentTransaction(db.Model):
         return f"<PaymentTransaction {self.id} - {self.plan} - {self.status}>"
 
 
-# Notification model for user alerts
 class Notification(db.Model):
     __tablename__ = "notification"
     
@@ -276,22 +298,19 @@ class Notification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    type = db.Column(db.String(50), default="info")  # info, success, warning, danger
+    type = db.Column(db.String(50), default="info")
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("notifications", lazy=True, cascade="all, delete-orphan"))
     
     def mark_as_read(self):
-        """Mark notification as read"""
         self.is_read = True
     
     def __repr__(self):
         return f"<Notification {self.id} - {self.title}>"
 
 
-# Activity log for tracking user actions
 class ActivityLog(db.Model):
     __tablename__ = "activity_log"
     
@@ -303,7 +322,6 @@ class ActivityLog(db.Model):
     user_agent = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship("User", backref=db.backref("activity_logs", lazy=True))
     
     def __repr__(self):

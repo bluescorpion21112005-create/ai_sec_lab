@@ -18,3 +18,16 @@ python-multipart==0.0.20
 sqlalchemy==2.0.39
 pydantic==2.12.1
 gunicorn
+pandas
+transformers
+torch
+pefile
+scapy
+face_recognition
+speechrecognition
+pytesseract
+pillow
+networkx
+tldextract
+requests
+python-magic

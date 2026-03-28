@@ -8,13 +8,15 @@ from flask import (
     flash,
     jsonify,
     g,
-    send_from_directory
+    abort, 
+    send_from_directory,
+    session
 )
 from predictor import predict_text, scan_url
 from lab_analyzer import analyze_case
 from markupsafe import Markup
 from datetime import datetime, timedelta
-from flask_login import LoginManager, login_required, current_user, logout_user
+from flask_login import LoginManager, login_user, login_required, current_user, logout_user
 from config import (
     SECRET_KEY,
     SQLALCHEMY_DATABASE_URI,
@@ -28,14 +30,29 @@ from models import db, User, Project, ScanRecord, Subscription, LocalScanResult,
 from auth import auth_bp
 from report_builder import save_lab_report_json, save_lab_report_csv
 from functools import wraps
+from flask_wtf.csrf import CSRFProtect
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
 import io
 import csv
 import json
 import difflib
 import asyncio
+import requests
+import joblib
+import numpy as np
+import openai
+import hashlib
+import pickle
+import warnings
+
+from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
 from utils import clip_text
 from backend.app.scanner.vulnerability_scanner import VulnerabilityScanner
+from urllib.parse import urlparse
+from flask_sqlalchemy import SQLAlchemy
+
 
 pentest_scanner = VulnerabilityScanner()
 
@@ -61,21 +78,88 @@ print("DB PATH:", os.path.abspath("siteguard.db"))
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = SECRET_KEY
-app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = SQLALCHEMY_TRACK_MODIFICATIONS
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this-secret")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABSE_URL", "sqlite:///site.db")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
+db = SQLAlchemy(app)
+
+if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgres://"):
+    app.config["SQLALCHEMY_DATABASE_URI"] = app.config["SQLALCHEMY_DATABASE_URI"].replace("postgres://", "postgresql://", 1)
 
 db.init_app(app)
+csrf =CSRFProtect(app)
+
 
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 login_manager.init_app(app)
 
+oauth = OAuth(app)
+
+google = oauth.register(
+    name="google",
+    client_id = os.getenv("GOOGLE_CLIENT_ID"),
+    client_secrets = os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs = {"scope": "openid email profile"}
+)
+
+
 app.register_blueprint(auth_bp)
 
 SCAN_HISTORY = []
 LAST_LAB_CASE = None
+
+load_dotenv()
+
+openai.api_key = os.getenv("    ")
+
+# ========================= MODEL =========================
+class AnalysisResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    feature = db.Column(db.String(100))
+    input_data = db.Column(db.Text)
+    result = db.Column(db.Text)
+    confidence = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ========================= YORDAMCHI FUNKSIYALAR =========================
+def save_result(feature, input_data, result, confidence=1.0):
+    """Natijani bazaga saqlaydi"""
+    record = AnalysisResult(
+        feature=feature,
+        input_data=input_data,
+        result=result,
+        confidence=confidence
+    )
+    db.session.add(record)
+    db.session.commit()
+    return record.id
+
+def ai_text_analysis(prompt, system_msg="You are a cybersecurity expert."):
+    """OpenAI GPT orqali matnli tahlil (misol)"""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2
+        )
+        return response.choices[0].message.content, 0.95
+    except Exception as e:
+        return f"Error: {str(e)}", 0.0
+
+# Agar mahalliy ML modellar ishlatsangiz, ularni yuklash:
+# model_log = joblib.load('models/log_anomaly.pkl')
+# vectorizer = joblib.load('models/tfidf.pkl')
+# ...
+
+# ========================= ROUTELAR =========================
+# Har bir funksiya uchun alohida route yoki umumiy endpoint.
+# Quyida barcha funksiyalar ro‘yxati bo‘yicha routelar keltirilgan.
 
 
 def badge_class_name(label: str) -> str:
@@ -108,6 +192,23 @@ def get_active_plan(user):
 def user_has_feature(user, feature_name):
     plan = get_active_plan(user)
     return feature_name in PLAN_FEATURES.get(plan, [])
+def user_can_scan_url(user, target_url: str):
+    target_domain = extract_domain_from_url(target_url)
+
+    if not target_domain:
+        return False, None
+
+    verified_projects = Project.query.filter_by(
+        user_id=user.id,
+        is_verified=True
+    ).all()
+
+    for project in verified_projects:
+        if project.domain and domain_matches_project(target_domain, project.domain):
+            return True, project
+
+    return False, None
+
 
 
 def feature_required(feature_name):
@@ -126,6 +227,21 @@ def feature_required(feature_name):
 
         return wrapper
     return decorator
+def normalize_domain(value: str) -> str:
+    if not value:
+        return ""
+    value = value.strip().lower()
+
+    if not value.startswith(("http://", "https://")):
+        value = "https://" + value
+
+    parsed = urlparse(value)
+    domain = parsed.netloc.lower().strip()
+
+    if domain.startswith("www."):
+        domain = domain[4:]
+
+    return domain
 
 
 def normalize_pentest_result(scan_result: dict) -> dict:
@@ -286,6 +402,32 @@ def history_counts():
         elif item["label"] == "SQL_ERROR":
             counts["sql_error"] += 1
     return counts
+def extract_domain_from_url(url: str) -> str:
+    if not url:
+        return ""
+    url = url.strip()
+
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    parsed = urlparse(url)
+    domain = parsed.netloc.lower().strip()
+
+    if domain.startswith("www."):
+        domain = domain[4:]
+
+    return domain
+
+
+def domain_matches_project(target_domain: str, project_domain: str) -> bool:
+    target_domain = normalize_domain(target_domain)
+    project_domain = normalize_domain(project_domain)
+
+    if not target_domain or not project_domain:
+        return False
+
+    return target_domain == project_domain or target_domain.endswith("." + project_domain)
+
 
 
 def is_subscription_active(user):
@@ -315,6 +457,19 @@ def log_api_usage(user, endpoint):
     db.session.add(usage)
     db.session.commit()
 
+def log_activity(user, action, details=None):
+    from models import ActivityLog
+    entry = ActivityLog(
+        user_id=user.id if user else None,
+        action=action,
+        details=details,
+        ip_address=request.headers.get("X-Forwarded-For", request.remote_addr),
+        user_agent=request.headers.get("User-Agent", "")[:255]
+    )
+    db.session.add(entry)
+    db.session.commit()
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -333,7 +488,223 @@ def regenerate_api_token():
     db.session.commit()
     flash("API token muvaffaqiyatli yangilandi.", "success")
     return redirect(url_for("dashboard"))
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
 
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            flash("Email not found.", "danger")
+            return render_template("login.html")
+
+        if not user.password_hash:
+            flash("This account uses Google login. Please continue with Google.", "warning")
+            return render_template("login.html")
+
+        if not check_password_hash(user.password_hash, password):
+            flash("Invalid email or password.", "danger")
+            return render_template("login.html")
+
+        login_user(user)
+        log_activity(user, "login", f"Local login for {email}")
+        flash("Logged in successfully.", "success")
+        return redirect(url_for("dashboard"))
+
+    return render_template("login.html")
+
+
+
+@app.route("/login/google")
+def login_google():
+    redirect_uri = url_for("authorize_google", _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route("/authorize/google")
+def authorize_google():
+    token = google.authorize_access_token()
+    user_info = token.get("userinfo")
+
+    if not user_info:
+        resp = google.get("userinfo")
+        user_info = resp.json()
+
+    email = (user_info.get("email") or "").strip().lower()
+    full_name = user_info.get("name") or "Google User"
+    google_id = user_info.get("sub")
+
+    if not email:
+        flash("Google account email not found.", "danger")
+        return redirect(url_for("auth.login"))
+
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        if not user.google_id:
+            user.google_id = google_id
+        if user.auth_provider == "local":
+            user.auth_provider = "mixed"
+        elif not user.auth_provider:
+            user.auth_provider = "google"
+    else:
+        user = User(
+            full_name=full_name,
+            email=email,
+            google_id=google_id,
+            auth_provider="google",
+            password_hash=None
+        )
+        db.session.add(user)
+
+    db.session.commit()
+    login_user(user)
+    log_activity(user, "login_google", f"Google login for {email}")
+    flash("Logged in with Google successfully.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    log_activity(current_user, "logout", f"Logout for {current_user.email}")
+    logout_user()
+    flash("You have been logged out.", "info")
+    return redirect(url_for("auth.login"))
+
+
+
+
+@app.route("/projects/add", methods=["GET", "POST"])
+@login_required
+def add_project():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        domain = normalize_domain(request.form.get("domain", "").strip())
+        description = request.form.get("description", "").strip()
+
+        if not name or not domain:
+            flash("Project name and domain are required.", "danger")
+            return render_template("add_project.html")
+
+        existing = Project.query.filter_by(user_id=current_user.id, domain=domain).first()
+        if existing:
+            flash("This domain is already added.", "warning")
+            return redirect(url_for("dashboard"))
+
+        project = Project(
+            name=name,
+            domain=domain,
+            description=description,
+            user_id=current_user.id,
+            verification_method="meta"
+        )
+        project.ensure_token()
+
+        db.session.add(project)
+        db.session.commit()
+
+        flash("Project added. Complete verification before scanning.", "success")
+        return redirect(url_for("verify_project", project_id=project.id))
+
+    return render_template("add_project.html")
+
+
+@app.route("/projects/<int:project_id>/verify", methods=["GET"])
+@login_required
+def verify_project(project_id):
+    project = Project.query.filter_by(id=project_id, user_id=current_user.id).first_or_404()
+    project.ensure_token()
+    db.session.commit()
+    return render_template("verify_project.html", project=project)
+
+
+@app.route("/projects/<int:project_id>/verify/check", methods=["POST"])
+@login_required
+def check_project_verification(project_id):
+    project = Project.query.filter_by(id=project_id, user_id=current_user.id).first_or_404()
+
+    project.ensure_token()
+    meta_url = f"https://{project.domain}"
+    html_url = f"https://{project.domain}/{project.verification_html_filename()}"
+
+    verified = False
+
+    # 1) meta tag check
+    try:
+        response = requests.get(meta_url, timeout=10, headers={"User-Agent": "CybrixBot/1.0"})
+        if response.ok and project.verification_token in response.text:
+            verified = True
+            project.verification_method = "meta"
+    except Exception:
+        pass
+
+    # 2) html file check
+    if not verified:
+        try:
+            response = requests.get(html_url, timeout=10, headers={"User-Agent": "CybrixBot/1.0"})
+            if response.ok and project.verification_token in response.text:
+                verified = True
+                project.verification_method = "html"
+        except Exception:
+            pass
+
+    if verified:
+        from datetime import datetime
+        project.is_verified = True
+        project.verified_at = datetime.utcnow()
+        db.session.commit()
+        flash("Domain verified successfully.", "success")
+    else:
+        flash("Verification not found yet. Add the meta tag or HTML file and try again.", "warning")
+
+    return redirect(url_for("verify_project", project_id=project.id))
+
+
+@app.route("/scan/sql", methods=["POST"])
+@login_required
+def scan_sql():
+    target_url = request.form.get("url", "").strip()
+
+    if not target_url:
+        flash("Target URL is required.", "danger")
+        return redirect(url_for("dashboard"))
+
+    allowed, project = user_can_scan_url(current_user, target_url)
+
+    if not allowed:
+        flash("You can only scan domains that you own and have verified.", "danger")
+        return redirect(url_for("dashboard"))
+
+    # Bu yerda sening haqiqiy SQL scanner functioning ishlaydi
+    # misol: result = analyze_sql_target(target_url)
+
+    result_text = f"SQL scan completed for {target_url}"
+    risk_score = 0.0
+
+    scan = ScanRecord(
+        user_id=current_user.id,
+        project_id=project.id if project else None,
+        target=target_url,
+        source="web",
+        label="SQL Error Detector",
+        status="completed",
+        length=len(result_text),
+        scan_type="sql",
+        result=result_text,
+        risk_score=risk_score
+    )
+    db.session.add(scan)
+    db.session.commit()
+
+    log_activity(current_user, "scan_sql", f"Scanned {target_url}")
+    flash("SQL scan finished successfully.", "success")
+    return redirect(url_for("dashboard"))
 
 @app.route("/admin")
 @login_required
@@ -348,6 +719,49 @@ def admin_panel():
     print("DB URI:", app.config.get("SQLALCHEMY_DATABASE_URI"))
 
     return render_template("admin.html", users=users, payments=payments, scans=scans)
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        full_name = request.form.get("full_name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not full_name or not email or not password or not confirm_password:
+            flash("All fields are required.", "danger")
+            return render_template("register.html")
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+            return render_template("register.html")
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template("register.html")
+
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash("This email is already registered.", "warning")
+            return redirect(url_for("auth.login"))
+
+        user = User(
+            full_name=full_name,
+            email=email,
+            password_hash=generate_password_hash(password),
+            auth_provider="local"
+        )
+        db.session.add(user)
+        db.session.commit()
+
+        login_user(user)
+        log_activity(   user, "register", f"Local registration for {email}")
+        flash("Account created successfully.", "success")
+        return redirect(url_for("dashboard"))
+
+    return render_template("register.html")
 @app.route("/site-monitoring")
 @login_required
 def site_monitoring():
@@ -364,10 +778,9 @@ def download_desktop_agent():
     downloads_dir = os.path.join(app.root_path, "static", "downloads")
     return send_from_directory(
         downloads_dir,
-        "AI-Sec-Lab.exe",
+        "agent_app.exe",
         as_attachment=True
     )
-
 
 @app.context_processor
 def inject_plan_data():
@@ -968,12 +1381,7 @@ def verify_domain(project_id):
     return render_template("verify_domain.html", project=project)
 
 
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("You have been logged out successfully.", "success")
-    return redirect(url_for("auth.login"))
+
 
 
 @app.route("/dashboard")

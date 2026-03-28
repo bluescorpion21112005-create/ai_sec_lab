@@ -528,6 +528,15 @@
         border-color: #00ffff;
         border-top-color: #00ccff;
     }
+
+    /* Custom error message */
+    .url-validation-error {
+        color: #ff4444;
+        font-size: 0.85rem;
+        margin-top: -0.5rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
   </style>
 </head>
 <body>
@@ -617,17 +626,21 @@
         <div class="panel-grid">
           <section class="card">
             <h2 class="section-title">SQL Error Detector</h2>
-            <form method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data">
+
+            <form method="POST" action="{{ url_for('analyze') }}" enctype="multipart/form-data" id="sqlForm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="tool_type" value="sql">
 
               <div class="form-block">
                 <input id="url" type="text" name="url" value="{{ url }}" placeholder=" ">
                 <label for="url">Single URL</label>
+                <div class="url-validation-error" id="singleUrlError">⚠️ Faqat localhost, 127.0.0.1 yoki *.lab manzillari ruxsat etilgan.</div>
               </div>
 
               <div class="form-block">
-                <textarea id="batch_urls" name="batch_urls" placeholder=" ">{{ batch_urls }}</textarea>
+                <textarea id="batch_urls" name="batch_urls" placeholder=" " rows="3">{{ batch_urls }}</textarea>
                 <label for="batch_urls">Batch URLs (one per line)</label>
+                <div class="url-validation-error" id="batchUrlsError">⚠️ Ba'zi URL-lar ruxsat etilmagan (faqat localhost, 127.0.0.1 yoki *.lab).</div>
               </div>
 
               <div class="form-block">
@@ -660,14 +673,14 @@
               <div class="actions">
                 <button class="btn btn-primary" type="submit">Analyze</button>
                 <button class="btn btn-secondary" type="submit" name="analyze_lab_case" value="1">Analyze Lab Case</button>
-                <a class="btn btn-outline" href="/export/csv">Export CSV</a>
-                <a class="btn btn-outline" href="/export/lab-csv">Export Lab CSV</a>
+                <a class="btn btn-outline" href="{{ url_for('export_csv') }}">Export CSV</a>
+                <a class="btn btn-outline" href="{{ url_for('export_lab_csv') }}">Export Lab CSV</a>
               </div>
             </form>
 
             <div class="note-box">
               <strong>Safe use:</strong> faqat o‘zingizga tegishli lab, training target, DVWA, Juice Shop,
-              PortSwigger labs yoki ruxsat berilgan fayllarda ishlating.
+              PortSwigger labs yoki ruxsat berilgan fayllarda ishlating. Tashqi saytlarni (google.com, microsoft.com va b.) tekshirish TA'QIQLANADI.
             </div>
           </section>
 
@@ -703,18 +716,33 @@
               </div>
 
               <div class="meter-row">
-                <div class="meter-head"><span>NORMAL</span><span>{{ '%.3f'|format(result['normal']) }}</span></div>
-                <div class="bar"><div class="fill fill-normal" style="width: {{ result['normal'] * 100 }}%"></div></div>
+                <div class="meter-head">
+                  <span>NORMAL</span>
+                  <span>{{ '%.3f'|format(result['normal']) }}</span>
+                </div>
+                <div class="bar">
+                  <div class="fill fill-normal" style="width: {{ result['normal'] * 100 }}%"></div>
+                </div>
               </div>
 
               <div class="meter-row">
-                <div class="meter-head"><span>SUSPICIOUS</span><span>{{ '%.3f'|format(result['suspicious']) }}</span></div>
-                <div class="bar"><div class="fill fill-suspicious" style="width: {{ result['suspicious'] * 100 }}%"></div></div>
+                <div class="meter-head">
+                  <span>SUSPICIOUS</span>
+                  <span>{{ '%.3f'|format(result['suspicious']) }}</span>
+                </div>
+                <div class="bar">
+                  <div class="fill fill-suspicious" style="width: {{ result['suspicious'] * 100 }}%"></div>
+                </div>
               </div>
 
               <div class="meter-row">
-                <div class="meter-head"><span>SQL_ERROR</span><span>{{ '%.3f'|format(result['sql_error']) }}</span></div>
-                <div class="bar"><div class="fill fill-sql" style="width: {{ result['sql_error'] * 100 }}%"></div></div>
+                <div class="meter-head">
+                  <span>SQL_ERROR</span>
+                  <span>{{ '%.3f'|format(result['sql_error']) }}</span>
+                </div>
+                <div class="bar">
+                  <div class="fill fill-sql" style="width: {{ result['sql_error'] * 100 }}%"></div>
+                </div>
               </div>
 
               <div class="sub-title">Matched SQL keywords</div>
@@ -771,9 +799,9 @@
           </div>
 
           <div class="table-wrap">
-            <table>
+             <table>
               <thead>
-                <tr>
+                 <tr>
                   <th>#</th>
                   <th>Payload File</th>
                   <th>Prediction</th>
@@ -783,7 +811,7 @@
                   <th>Length Δ</th>
                   <th>Matched SQL</th>
                   <th>Matched Suspicious</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {% for item in lab_case.payloads %}
@@ -811,56 +839,6 @@
         </section>
         {% endif %}
       </div>
-
-      <!-- PENTEST TOOL -->
-      <div id="pentest-tool" class="tool-panel">
-        <div class="panel-grid">
-          <section class="card">
-            <h2 class="section-title">AI Pentest Scanner</h2>
-
-            <div class="form-block">
-              <input type="url" id="targetUrl" placeholder=" ">
-              <label for="targetUrl">Target URL</label>
-            </div>
-
-            <div class="form-block">
-              <select id="scanType">
-                <option value="quick">Tezkor skanerlash</option>
-                <option value="full">To'liq skanerlash</option>
-                <option value="ai_enhanced">AI kuchaytirilgan</option>
-              </select>
-              <label for="scanType">Scan Type</label>
-            </div>
-
-            <div class="actions">
-              <button class="btn btn-primary" onclick="startScan()">
-                <i class="fas fa-search"></i> Pentest Scan
-              </button>
-            </div>
-
-            <div class="features-mini-grid">
-              <div class="mini-feature"><i class="fas fa-bug"></i><span>SQLi / XSS</span></div>
-              <div class="mini-feature"><i class="fas fa-robot"></i><span>AI Analysis</span></div>
-              <div class="mini-feature"><i class="fas fa-file-lines"></i><span>Reports</span></div>
-              <div class="mini-feature"><i class="fas fa-chart-line"></i><span>Risk Score</span></div>
-            </div>
-          </section>
-
-          <section class="card">
-            <h2 class="section-title">Pentest Results</h2>
-
-            <div id="scanResults" class="scan-results">
-              <div class="scan-progress">
-                <div class="progress-bar" id="progressBar"></div>
-              </div>
-              <div id="resultsContent">
-                <p class="muted">No pentest scan yet. Enter a target URL and start scanning.</p>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </section>
 
     <!-- DASHBOARD SECTION -->
     <section id="dashboard" class="dashboard-section">
@@ -1020,83 +998,124 @@
   </footer>
 
   <script>
-    // MATRIX RAIN EFFECT
+    // ============================
+    // URL VALIDATION FOR SQL TOOL
+    // ============================
+    function isAllowedUrl(url) {
+        if (!url) return true; // empty is allowed
+        try {
+            // Remove protocol and get hostname
+            let hostname = url.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').split(':')[0];
+            // Allowed patterns: localhost, 127.0.0.1, any domain ending with .lab (case insensitive)
+            const allowedPatterns = [
+                /^localhost$/i,
+                /^127\.0\.0\.1$/,
+                /^([a-z0-9-]+\.)*lab$/i
+            ];
+            return allowedPatterns.some(pattern => pattern.test(hostname));
+        } catch(e) {
+            return false;
+        }
+    }
+
+    function validateUrls() {
+        let isValid = true;
+        const singleUrl = document.getElementById('url').value.trim();
+        const batchText = document.getElementById('batch_urls').value;
+        
+        // Single URL validation
+        const singleErrorDiv = document.getElementById('singleUrlError');
+        if (singleUrl && !isAllowedUrl(singleUrl)) {
+            singleErrorDiv.style.display = 'block';
+            isValid = false;
+        } else {
+            singleErrorDiv.style.display = 'none';
+        }
+        
+        // Batch URLs validation
+        const batchErrorDiv = document.getElementById('batchUrlsError');
+        if (batchText) {
+            const urls = batchText.split('\n').filter(line => line.trim() !== '');
+            const invalidUrls = urls.filter(url => !isAllowedUrl(url.trim()));
+            if (invalidUrls.length > 0) {
+                batchErrorDiv.style.display = 'block';
+                isValid = false;
+            } else {
+                batchErrorDiv.style.display = 'none';
+            }
+        } else {
+            batchErrorDiv.style.display = 'none';
+        }
+        
+        return isValid;
+    }
+
+    // Attach validation to the SQL form
+    const sqlForm = document.getElementById('sqlForm');
+    if (sqlForm) {
+        sqlForm.addEventListener('submit', function(e) {
+            if (!validateUrls()) {
+                e.preventDefault();
+                alert('⚠️ Ruxsat etilmagan URL manzili! Faqat localhost, 127.0.0.1 va *.lab domenlari ruxsat etilgan.');
+            }
+        });
+    }
+
+    // ============================
+    // Existing scripts (matrix, plexus, etc.)
+    // ============================
     (function() {
         const canvas = document.getElementById('matrix-canvas');
         if (!canvas) return;
-        
         const ctx = canvas.getContext('2d');
-        
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
-        
         const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
         const charArray = chars.split('');
         const fontSize = 14;
         let columns = Math.floor(width / fontSize);
         let drops = [];
-        
-        for (let i = 0; i < columns; i++) {
-            drops[i] = Math.random() * -100;
-        }
-        
+        for (let i = 0; i < columns; i++) drops[i] = Math.random() * -100;
         function drawMatrix() {
             if (!ctx) return;
-            
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, width, height);
-            
             ctx.fillStyle = '#0f0';
             ctx.font = fontSize + 'px monospace';
-            
             for (let i = 0; i < drops.length; i++) {
                 const char = charArray[Math.floor(Math.random() * charArray.length)];
                 const x = i * fontSize;
                 const y = drops[i] * fontSize;
-                
                 ctx.fillStyle = `rgba(0, 255, 0, ${Math.random() * 0.5 + 0.3})`;
                 ctx.fillText(char, x, y);
-                
-                if (y > height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
-                
+                if (y > height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
-            
             requestAnimationFrame(drawMatrix);
         }
-        
         function resizeCanvas() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             columns = Math.floor(width / fontSize);
             drops = [];
-            for (let i = 0; i < columns; i++) {
-                drops[i] = Math.random() * -100;
-            }
+            for (let i = 0; i < columns; i++) drops[i] = Math.random() * -100;
         }
-        
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
         drawMatrix();
     })();
 
-    // PLEXUS EFFECT - NEURAL NETWORK MESH
     (function() {
         const canvas = document.getElementById('plexus-canvas');
         if (!canvas) return;
-        
         const ctx = canvas.getContext('2d');
         let width, height;
         let particles = [];
         const PARTICLE_COUNT = 80;
         const CONNECTION_DISTANCE = 150;
-        
         function init() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
-            
             particles = [];
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 particles.push({
@@ -1108,19 +1127,14 @@
                 });
             }
         }
-        
         function draw() {
             if (!ctx) return;
-            
             ctx.clearRect(0, 0, width, height);
-            
-            // Draw connections
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
                     const dx = particles[i].x - particles[j].x;
                     const dy = particles[i].y - particles[j].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    
                     if (distance < CONNECTION_DISTANCE) {
                         const opacity = (1 - distance / CONNECTION_DISTANCE) * 0.3;
                         ctx.beginPath();
@@ -1132,36 +1146,25 @@
                     }
                 }
             }
-            
-            // Draw particles
             for (let i = 0; i < particles.length; i++) {
                 ctx.beginPath();
                 ctx.arc(particles[i].x, particles[i].y, particles[i].radius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(0, 255, 255, ${Math.random() * 0.5 + 0.5})`;
                 ctx.fill();
-                
-                // Update position
                 particles[i].x += particles[i].vx;
                 particles[i].y += particles[i].vy;
-                
-                // Boundary check
                 if (particles[i].x < 0 || particles[i].x > width) particles[i].vx *= -1;
                 if (particles[i].y < 0 || particles[i].y > height) particles[i].vy *= -1;
-                
-                // Keep in bounds
                 particles[i].x = Math.max(0, Math.min(width, particles[i].x));
                 particles[i].y = Math.max(0, Math.min(height, particles[i].y));
             }
-            
             requestAnimationFrame(draw);
         }
-        
         function resize() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             init();
         }
-        
         window.addEventListener('resize', resize);
         init();
         draw();
@@ -1177,13 +1180,10 @@
       document.querySelectorAll('.tool-panel').forEach(panel => {
         panel.classList.remove('active');
       });
-
       document.querySelectorAll('.tool-tab').forEach(tab => {
         tab.classList.remove('active');
       });
-
       document.getElementById(toolId).classList.add('active');
-
       if (toolId === 'sql-tool') {
         document.getElementById('sql-tab').classList.add('active');
       } else {
@@ -1196,12 +1196,10 @@
         const scanType = document.getElementById('scanType').value;
         const resultsDiv = document.getElementById('resultsContent');
         const progressBar = document.getElementById('progressBar');
-        
         if (!targetUrl) {
             alert('Please enter a target URL');
             return;
         }
-        
         resultsDiv.innerHTML = '<div class="loading">Scanning in progress...</div>';
         let progress = 0;
         const interval = setInterval(() => {
@@ -1250,10 +1248,9 @@
     }
 
     const chartData = {{ chart_json|safe }};
-    const ctx = document.getElementById("scanChart");
-
-    if (ctx) {
-      new Chart(ctx, {
+    const chartCtx = document.getElementById("scanChart");
+    if (chartCtx) {
+      new Chart(chartCtx, {
         type: "bar",
         data: {
           labels: ["NORMAL", "SUSPICIOUS", "SQL_ERROR"],
